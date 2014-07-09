@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace dmstr\db\mysql\FileMigration;
+namespace dmstr\db\mysql;
 
 use yii\base\Exception;
 use yii\db\Migration;
@@ -18,7 +18,7 @@ use yii\db\Migration;
  * @package common\components
  * @author Tobias Munk <tobias@diemeisterei.de>
  */
-class MysqlFileMigration extends Migration
+class FileMigration extends Migration
 {
 
     public $file = null;
