@@ -7,8 +7,9 @@
  * file that was distributed with this source code.
  */
 
-namespace common\models;
+namespace dmstr\db\behaviors;
 
+use yii\base\Behavior;
 use yii\db\ActiveRecord;
 
 
@@ -17,41 +18,40 @@ use yii\db\ActiveRecord;
  * @package common\models
  * @author Tobias Munk <tobias@diemeisterei.de>
  */
-class RelatedAttributes
+class HydratedAttributes extends Behavior
 {
     private $_m;
     private $_d;
 
-    public function __construct($model)
+    public function getHydratedAttributes()
     {
-        $this->_m = $model;
-        $this->_d = $this->_m->attributes;
-        $this->parseAttributesRecursive($model, $this->_d);
-    }
-
-    public function getData(){
-        return $this->_d;
+        $attributes = $this->owner->attributes;
+        $this->parseAttributesRecursive($this->owner, $attributes);
+        return $attributes;
     }
 
     /**
      * @param $model The model which attributes should be parsed recursively
      * @param $attributes Variable which holds the attributes
      */
-    private function parseAttributesRecursive($model, &$attributes){
-        foreach($model->relatedRecords AS $name => $relation) {
+    private function parseAttributesRecursive($model, &$attributes)
+    {
+        foreach ($model->relatedRecords AS $name => $relation) {
             if (is_array($relation)) {
                 // many_many relation
                 $attributes[$name] = [];
-                foreach($relation AS $rModel){
+                foreach ($relation AS $rModel) {
                     $d = $rModel->attributes;
                     $this->parseAttributesRecursive($rModel, $d);
                     $attributes[$name][] = $d;
                 }
-            } else if ($relation instanceof ActiveRecord) {
-                // non-multiple
-                $attributes[$name] = $relation->attributes;
             } else {
-                $attributes[$name] = null;
+                if ($relation instanceof ActiveRecord) {
+                    // non-multiple
+                    $attributes[$name] = $relation->attributes;
+                } else {
+                    $attributes[$name] = null;
+                }
             }
         }
     }
