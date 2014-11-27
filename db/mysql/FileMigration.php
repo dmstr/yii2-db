@@ -42,10 +42,14 @@ class FileMigration extends Migration
     {
         preg_match('/host=([^;]*)/', $this->db->dsn, $hostMatches);
         $hostName = $hostMatches[1];
-        preg_match('/port=([^;]*)/', $this->db->dsn, $portMatches);
-        $port = $portMatches[1];
         preg_match('/dbname=([^;]*)/', $this->db->dsn, $databaseMatches);
         $databaseName = $databaseMatches[1];
+        preg_match('/port=([^;]*)/', $this->db->dsn, $portMatches);
+        if (isset($portMatches[1])) {
+            $port = $portMatches[1];
+        } else {
+            $port = "3306";
+        }
 
         $command      = "{$this->mysqlExecutable} -h{$hostName} -P{$port} -u{$this->db->username} -p{$this->db->password} {$databaseName} < '{$this->file}'";
         echo "    ".$command . "\n"; // TODO echo only with --verbose
