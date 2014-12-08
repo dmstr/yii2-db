@@ -22,10 +22,16 @@ or add
 to the require section of your `composer.json` file.
 
 
+Contents
+--------
+- [db\behaviors\HydratedAttributes](https://github.com/dmstr/yii2-db/blob/master/db/behaviors/HydratedAttributes.php) - retrieve all eager loaded attributes of a model including relations
+- [db\mysql\FileMigration](https://github.com/dmstr/yii2-db/blob/master/db/mysql/FileMigration.php) - runs database migrations from `sql` files
+
 Usage
 -----
 
-Once the extension is installed, simply use it in your code by  :
+Once the extension is installed, simply use it in your code by accessing the corresponding classes by their full namespaced path.
 
-```php
-<?= \dmstr\db\AutoloadExample::widget(); ?>```
+Examples
+-------
+tbd
