@@ -31,6 +31,9 @@ class FileMigration extends Migration
         if ($this->file === null) {
             $reflection = new \ReflectionClass($this);
             $this->file = str_replace('.php', '.sql', $reflection->getFileName());
+        } else {
+            $reflection = new \ReflectionClass($this);
+            $this->file = dirname($reflection->getFileName()).'/'.$this->file;
         }
 
         if (!is_file($this->file)) {
