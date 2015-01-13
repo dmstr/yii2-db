@@ -24,13 +24,21 @@ to the require section of your `composer.json` file.
 
 Contents
 --------
-- [dmstr\db\behaviors\HydratedAttributes](https://github.com/dmstr/yii2-db/blob/master/db/behaviors/HydratedAttributes.php) - retrieve all eager loaded attributes of a model including relations
-- [dmstr\db\mysql\FileMigration](https://github.com/dmstr/yii2-db/blob/master/db/mysql/FileMigration.php) - runs database migrations from `sql` files, usage:
 
-  ```
-  <?php
-  class m141113_221649_init extends \dmstr\db\mysql\FileMigration {}
-  ```
+### [dmstr\db\behaviors\HydratedAttributes](https://github.com/dmstr/yii2-db/blob/master/db/behaviors/HydratedAttributes.php)
+
+retrieve all eager loaded attributes of a model including relations
+
+### [dmstr\db\mysql\FileMigration](https://github.com/dmstr/yii2-db/blob/master/db/mysql/FileMigration.php)
+
+runs database migrations from `sql` files
+
+Create a file migration class
+
+```
+./yii migrate/create --templateFile='@dmstr/db/mysql/templates/file-migration.php' init_dump
+```
+  
 
 Usage
 -----
