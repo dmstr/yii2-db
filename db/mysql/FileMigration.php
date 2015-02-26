@@ -33,7 +33,7 @@ class FileMigration extends Migration
             $this->file = str_replace('.php', '.sql', $reflection->getFileName());
         } else {
             $reflection = new \ReflectionClass($this);
-            $this->file = dirname($reflection->getFileName()).'/'.$this->file;
+            $this->file = dirname($reflection->getFileName()).DIRECTORY_SEPARATOR.$this->file;
         }
 
         if (!is_file($this->file)) {
@@ -54,7 +54,7 @@ class FileMigration extends Migration
             $port = "3306";
         }
 
-        $command      = "{$this->mysqlExecutable} -h{$hostName} -P{$port} -u{$this->db->username} -p{$this->db->password} {$databaseName} < '{$this->file}'";
+        $command      = "{$this->mysqlExecutable} -h{$hostName} -P{$port} -u{$this->db->username} -p{$this->db->password} {$databaseName} < \"{$this->file}\"";
         echo "    ".$command . "\n"; // TODO echo only with --verbose
         exec($command, $output, $return);
 
