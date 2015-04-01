@@ -36,7 +36,8 @@ runs database migrations from `sql` files
 Create a file migration class
 
 ```
-./yii migrate/create --templateFile='@dmstr/db/mysql/templates/file-migration.php' init_dump
+./yii migrate/create \
+    --templateFile='@vendor/dmstr/yii2-db/mysql/templates/file-migration.php' init_dump
 ```
   
 
