@@ -1,18 +1,24 @@
 {
-	"name": "dmstr/yii2-db",
-	"description": "Database extensions",
-	"type": "yii2-extension",
-	"keywords": ["yii2","extension","database","db"],
-	"license": "BSD-3-Clause",
-	"authors": [
-		{
-			"name": "Tobias Munk",
-			"email": "tobias@diemeisterei.de"
-		}
-	],
-	"autoload": {
-		"psr-4": {
-			"dmstr\\db\\": "db/"
-		}
-	}
+  "name": "dmstr/yii2-db",
+  "description": "Database extensions",
+  "type": "yii2-extension",
+  "keywords": [
+    "yii2",
+    "extension",
+    "database",
+    "db"
+  ],
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Tobias Munk",
+      "email": "tobias@diemeisterei.de"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "dmstr\\db\\": "db/",
+      "dmstr\\console\\": "console/"
+    }
+  }
 }
