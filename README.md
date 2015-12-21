@@ -1,5 +1,6 @@
 Yii 2 Database Toolkit
 ======================
+
 Database extensions
 
 Installation
@@ -38,6 +39,21 @@ Create a file migration class
 ```
 ./yii migrate/create \
     --templateFile='@vendor/dmstr/yii2-db/mysql/templates/file-migration.php' init_dump
+```
+
+### dmstr\console\controllers\MysqlControllers
+  
+```
+DESCRIPTION
+
+MySQL database maintenance command.
+
+
+SUB-COMMANDS
+
+- db/create           Create MySQL database from ENV vars and grant permissions
+- db/dump             Dumps current database tables to runtime folder
+- db/index (default)  Displays tables in database
 ```
   
 

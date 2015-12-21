@@ -8,6 +8,8 @@ use yii\console\Controller;
 use yii\console\Exception;
 
 /**
+ * MySQL database maintenance command.
+ *
  * @link http://www.diemeisterei.de/
  * @copyright Copyright (c) 2015 diemeisterei GmbH, Stuttgart
  *
@@ -16,8 +18,19 @@ use yii\console\Exception;
  */
 class MysqlController extends Controller
 {
+    /**
+     * @var int Number of retries for MySql create operations
+     */
     public $mysqlRetryMaxCount = 20;
+
+    /**
+     * @var int Timeout in seconds between operations
+     */
     public $mysqlRetryTimeout = 2;
+
+    /**
+     * @var array list of tables with only structural (schema) commands in dumps
+     */
     public $noDataTables = [];
 
     /**
@@ -31,6 +44,10 @@ class MysqlController extends Controller
         );
     }
 
+    /**
+     * Displays tables in database
+     * @throws Exception
+     */
     public function actionIndex()
     {
         $this->stdout("MySQL maintenance command\n");
@@ -42,7 +59,7 @@ class MysqlController extends Controller
     }
 
     /**
-     * create MySQL database from ENV vars and grant permissions
+     * Create MySQL database from ENV vars and grant permissions
      *
      * Note: skips creation, if root password is not set
      *
@@ -116,6 +133,11 @@ class MysqlController extends Controller
         $this->stdout("\n");
     }
 
+    /**
+     * Dumps current database tables to runtime folder
+     *
+     * @throws Exception
+     */
     public function actionDump()
     {
         $this->stdout("MySQL dump command\n");
