@@ -23,12 +23,12 @@ or add
 to the require section of your `composer.json` file.
 
 
-Contents
---------
+Usage
+-----
 
 ### [dmstr\db\behaviors\HydratedAttributes](https://github.com/dmstr/yii2-db/blob/master/db/behaviors/HydratedAttributes.php)
 
-retrieve all eager loaded attributes of a model including relations
+Retrieves all eager loaded attributes of a model including relations. Once the extension is installed, simply use it in your code by accessing the corresponding classes by their full namespaced path.
 
 ### [dmstr\db\mysql\FileMigration](https://github.com/dmstr/yii2-db/blob/master/db/mysql/FileMigration.php)
 
@@ -42,6 +42,22 @@ Create a file migration class
 ```
 
 ### dmstr\console\controllers\MysqlControllers
+
+Include it in your console configuration
+
+```
+   'controllerMap' => [
+        'db' => 'dmstr\console\controllers\MysqlController',
+    ],
+```
+
+Show help
+
+```
+./yii help db
+```
+
+Available commands
   
 ```
 DESCRIPTION
@@ -55,13 +71,7 @@ SUB-COMMANDS
 - db/dump             Dumps current database tables to runtime folder
 - db/index (default)  Displays tables in database
 ```
-  
 
-Usage
------
+---
 
-Once the extension is installed, simply use it in your code by accessing the corresponding classes by their full namespaced path.
-
-Examples
--------
-tbd
+Built by [dmstr](http://diemeisterei.de)
