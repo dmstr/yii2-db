@@ -38,7 +38,7 @@ Create a file migration class
 
 ```
 ./yii migrate/create \
-    --templateFile='@vendor/dmstr/yii2-db/mysql/templates/file-migration.php' init_dump
+    --templateFile='@vendor/dmstr/yii2-db/db/mysql/templates/file-migration.php' init_dump
 ```
 
 ### dmstr\console\controllers\MysqlControllers
