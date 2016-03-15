@@ -47,7 +47,13 @@ Include it in your console configuration
 
 ```
    'controllerMap' => [
-        'db' => 'dmstr\console\controllers\MysqlController',
+        'db'         => [
+            'class' => 'dmstr\console\controllers\MysqlController',
+            'noDataTables' => [
+                'app_log',
+                'app_session',
+            ]
+        ],
     ],
 ```
 
