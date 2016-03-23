@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  nginx:
+    image: phundament/nginx-one:1.9
+    volumes_from:
+      - php
+    ports:
+      - '80'
+    depends_on:
+      - php
+
+  php:
+    image: phundament/app:4.2.0
+    working_dir: /app/vendor/dmstr/yii2-db
+    depends_on:
+      - mariadb
+    environment:
+      APP_NAME: dmstrdb
+      APP_TITLE: 'dmstr/yii2-db'
+      YII_ENV: 'prod'
+      YII_DEBUG: 'false'
+      DB_PORT_3306_TCP_ADDR: mariadb
+      DB_PORT_3306_TCP_PORT: 3306
+      DB_ENV_MYSQL_ROOT_USER: root
+      DB_ENV_MYSQL_ROOT_PASSWORD: secretadmin
+    volumes:
+      - /app
+      - ../:/app/vendor/dmstr/yii2-db
+      - ./runtime:/app/runtime
+      #- ../tests/_config/local.php:/app/src/config/local.php
+    networks:
+      default:
+        aliases:
+          - phpfpm
+
+  mariadb:
+    image: 'percona:5.7'
+    ports:
+      - '3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: secretadmin
