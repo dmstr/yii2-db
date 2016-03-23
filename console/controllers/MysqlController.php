@@ -6,6 +6,7 @@ use igorw\FailingTooHardException;
 use mikehaertl\shellcommand\Command;
 use yii\console\Controller;
 use yii\console\Exception;
+use yii\helpers\FileHelper;
 
 /**
  * MySQL database maintenance command.
@@ -40,7 +41,7 @@ class MysqlController extends Controller
     {
         return array_merge(
             parent::options($actionId),
-            ($actionId == 'dump') ? ['noDataTables'] : [] // action dump
+            ($actionId == 'dump' || $actionId == 'x-dump-data') ? ['noDataTables'] : [] // action dump
         );
     }
 
@@ -170,6 +171,35 @@ class MysqlController extends Controller
         $this->execute($cmd);
 
         $this->stdout("Dump to file '$file' completed.\n");
+    }
+
+    /**
+     * EXPERIMENTAL: data only dump
+     * @throws \yii\base\Exception
+     */
+    public function actionXDumpData(){
+        $command = new Command('mysqldump');
+
+        $command->addArg('-h',getenv('DB_PORT_3306_TCP_ADDR'));
+        $command->addArg('-u',getenv('DB_ENV_MYSQL_USER'));
+        $command->addArg('--password=',getenv('DB_ENV_MYSQL_PASSWORD'));
+        $command->addArg('--no-create-info');
+        foreach ($this->noDataTables as $table) {
+            $command->addArg('--ignore-table',getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
+        }
+        $command->addArg(getenv('DB_ENV_MYSQL_DATABASE'));
+
+        $command->execute();
+
+        $dir = \Yii::getAlias('@runtime/mysql');
+        FileHelper::createDirectory($dir);
+        $fileName= 'data.sql';
+
+        $dump = $command->getOutput();
+        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/','LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;',$dump);
+
+        file_put_contents($dir.'/'.$fileName, $dump);
+        $this->stdout('Done.');
     }
 
     private function execute($cmd)

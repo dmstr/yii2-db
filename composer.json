@@ -15,6 +15,10 @@
       "email": "tobias@diemeisterei.de"
     }
   ],
+  "require": {
+    "mikehaertl/php-shellcommand": "1.*",
+    "yiisoft/yii2": "2.*"
+  },
   "autoload": {
     "psr-4": {
       "dmstr\\db\\": "db/",
