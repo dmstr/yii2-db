@@ -22,6 +22,32 @@ or add
 
 to the require section of your `composer.json` file.
 
+Commands
+--------
+
+**/!\ EXPERIMENTAL /!\**
+
+
+Only include specific tables (schema & data dump) 
+
+* `yii db/x-dump --includeTables=table_1,table,2,table_3,...`
+
+
+Only include specific tables (data dump)
+
+* `yii db/x-dump --includeTables=table_1,table,2,table_3,... --dataOnly=1`
+
+
+Dump all tables excluding specific tables (schema & data dump) 
+
+* `yii db/x-dump --excludeTables=table_1,table,2,table_3,...`
+
+
+Dump all tables excluding specific tables (data dump) 
+
+* `yii db/x-dump --excludeTables=table_1,table,2,table_3,... --dataOnly=1`
+
+
 
 Usage
 -----
