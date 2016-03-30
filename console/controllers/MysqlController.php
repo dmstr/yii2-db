@@ -35,13 +35,38 @@ class MysqlController extends Controller
     public $noDataTables = [];
 
     /**
+     * @var array list of tables to include in dumps
+     */
+    public $includeTables = [];
+
+    /**
+     * @var array list of tables to exclude in dumps
+     */
+    public $excludeTables = [];
+
+    /**
+     * @var $dataOnly bool [0|1] dump only data
+     */
+    public $dataOnly = 0;
+
+    /**
      * @inheritdoc
      */
     public function options($actionId)
     {
+        switch($actionId) {
+            case $actionId == 'dump' || $actionId == 'x-dump-data':
+                $additionalOptions = ['noDataTables'];
+                break;
+            case $actionId == 'x-dump':
+                $additionalOptions = ['includeTables', 'excludeTables', 'dataOnly'];
+                break;
+            default:
+                $additionalOptions = [];
+        }
         return array_merge(
             parent::options($actionId),
-            ($actionId == 'dump' || $actionId == 'x-dump-data') ? ['noDataTables'] : [] // action dump
+            $additionalOptions
         );
     }
 
@@ -202,6 +227,70 @@ class MysqlController extends Controller
         $this->stdout('Done.');
     }
 
+    /**
+     * EXPERIMENTAL: Schema and/or Data dumps
+     *
+     * @option: --includeTables
+     * @option: --excludeTables
+     * @option: --dataOnly [0|1]
+     */
+    public function actionXDump()
+    {
+        $date    = date('U');
+        $command = new Command('mysqldump');
+
+        $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
+        $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
+        $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
+        $command->addArg(getenv('DB_ENV_MYSQL_DATABASE'));
+
+        // default file name suffix
+        $fileNameSuffix = 'schema-data';
+
+        // if only data
+        if ($this->dataOnly == 1) {
+            $fileNameSuffix = 'data';
+            $command->addArg('--no-create-info');
+        }
+
+        // if include tables
+        if (!empty($this->includeTables)) {
+            foreach ($this->includeTables as $table) {
+                $command->addArg($table);
+            }
+        }
+
+        // if exclude tables
+        if (!empty($this->excludeTables)) {
+            foreach ($this->excludeTables as $table) {
+                $command->addArg('--ignore-table', getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
+            }
+        }
+
+        $command->execute();
+
+        $dump = $command->getOutput();
+        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;', $dump);
+
+        // generate file
+        $dir = \Yii::getAlias('@runtime/mysql');
+        FileHelper::createDirectory($dir);
+        $fileName = $date . '_' . getenv('DB_ENV_MYSQL_DATABASE') . '_' . $fileNameSuffix . '.sql';
+        $file     = $dir . '/' . $fileName;
+        file_put_contents($file, $dump);
+
+        $this->stdout("\n");
+        $this->stdout('MYSQL Dump successfully saved to');
+        $this->stdout("\n" . $file);
+        $this->stdout("\n\n");
+    }
+
+    /**
+     * @param $cmd
+     *
+     * @return mixed
+     * @throws Exception
+     */
     private function execute($cmd)
     {
         $command = new Command();
