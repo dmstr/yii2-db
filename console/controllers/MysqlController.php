@@ -50,6 +50,11 @@ class MysqlController extends Controller
     public $dataOnly = 0;
 
     /**
+     * @var $truncateTables bool [0|1] add truncate table command
+     */
+    public $truncateTables = 0;
+
+    /**
      * @inheritdoc
      */
     public function options($actionId)
@@ -59,7 +64,7 @@ class MysqlController extends Controller
                 $additionalOptions = ['noDataTables'];
                 break;
             case $actionId == 'x-dump':
-                $additionalOptions = ['includeTables', 'excludeTables', 'dataOnly'];
+                $additionalOptions = ['includeTables', 'excludeTables', 'dataOnly', 'truncateTables'];
                 break;
             default:
                 $additionalOptions = [];
@@ -233,19 +238,19 @@ class MysqlController extends Controller
      * @option: --includeTables
      * @option: --excludeTables
      * @option: --dataOnly [0|1]
+     * @option: --truncateTables [0|1]
      */
     public function actionXDump()
     {
-        $date    = date('U');
-        $command = new Command('mysqldump');
+        $command        = new Command('mysqldump');
+        $fileNameSuffix = 'schema-data';
+        $date           = date('U');
+        $truncateTable  = '';
 
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
         $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg(getenv('DB_ENV_MYSQL_DATABASE'));
-
-        // default file name suffix
-        $fileNameSuffix = 'schema-data';
 
         // if only data
         if ($this->dataOnly == 1) {
@@ -270,7 +275,12 @@ class MysqlController extends Controller
         $command->execute();
 
         $dump = $command->getOutput();
-        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;', $dump);
+
+        // if truncate tables
+        if ($this->truncateTables == 1) {
+            $truncateTable = 'TRUNCATE TABLE $1;';
+        }
+        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; ' . $truncateTable, $dump);
 
         // generate file
         $dir = \Yii::getAlias('@runtime/mysql');
