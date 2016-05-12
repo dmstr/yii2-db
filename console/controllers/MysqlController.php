@@ -98,14 +98,14 @@ class MysqlController extends Controller
      *
      * @param null $db database name `DATABASE_DSN_DB`
      * @param null $dsn database base-DSN `DATABASE_DSN_BASE`
-     * @param null $user `DB_ENV_MYSQL_USER`
-     * @param null $pass `DB_ENV_MYSQL_PASSWORD
      * @param null $root `DB_ENV_MYSQL_ROOT_USER
      * @param null $rootPassword `DB_ENV_MYSQL_ROOT_USER`
+     * @param null $user `DB_ENV_MYSQL_USER`
+     * @param null $pass `DB_ENV_MYSQL_PASSWORD
      *
      * @throws \yii\base\ExitException
      */
-    public function actionCreate($db = null,  $dsn = null, $user = null, $pass = null, $root = null, $rootPassword = null)
+    public function actionCreate($db = null,  $dsn = null, $root = null, $rootPassword = null, $user = null, $pass = null)
     {
         // check dsn
         if ($db === null) {
