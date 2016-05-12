@@ -90,44 +90,66 @@ class MysqlController extends Controller
     }
 
     /**
-     * Create MySQL database from ENV vars and grant permissions
+     * Create MySQL database
      *
-     * Note: skips creation, if root password is not set
+     * Note: Loads parameters from ENV vars, if empty.
      *
-     * @param $db database name
+     * Creates database and grants permissions to user
+     *
+     * @param null $db database name `DATABASE_DSN_DB`
+     * @param null $dsn database base-DSN `DATABASE_DSN_BASE`
+     * @param null $user `DB_ENV_MYSQL_USER`
+     * @param null $pass `DB_ENV_MYSQL_PASSWORD
+     * @param null $root `DB_ENV_MYSQL_ROOT_USER
+     * @param null $rootPassword `DB_ENV_MYSQL_ROOT_USER`
+     *
+     * @throws \yii\base\ExitException
      */
-    public function actionCreate($db = null)
+    public function actionCreate($db = null,  $dsn = null, $user = null, $pass = null, $root = null, $rootPassword = null)
     {
+        // check dsn
         if ($db === null) {
             $db = getenv("DATABASE_DSN_DB");
         }
         if (empty($db)) {
-            $this->stdout('No database configured, skipping setup.');
+            $this->stdout('No database configured, aborting.');
             return;
         }
 
-        $root = getenv("DB_ENV_MYSQL_ROOT_USER") ?: 'root';
-        $root_password = getenv("DB_ENV_MYSQL_ROOT_PASSWORD");
-        if (empty($root_password)) {
+        // check root user settings
+        $root = $root ?: getenv("DB_ENV_MYSQL_ROOT_USER");
+        if ($root === null) {
+            $this->stdout('No root user configured, aborting.');
             return;
         }
-        $user = getenv("DB_ENV_MYSQL_USER");
-        $pass = getenv("DB_ENV_MYSQL_PASSWORD");
-        $dsn = getenv("DATABASE_DSN_BASE");
+        $rootPassword = $rootPassword ?: getenv("DB_ENV_MYSQL_ROOT_PASSWORD");
+        if (empty($rootPassword)) {
+            $this->stdout('No root password configured, aborting.');
+            return;
+        }
 
+        $user = $user ?: getenv("DB_ENV_MYSQL_USER");
+        $pass = $pass ?: getenv("DB_ENV_MYSQL_PASSWORD");
+        $dsn = $dsn ?: getenv("DATABASE_DSN_BASE");
+
+        if (empty($user) || empty($pass) || empty($dsn)) {
+            $this->stdout('Configuration failed, aborting.');
+            return;
+        }
+
+        // trying to connect to database with PDO (20 times, interval 1 second)
         $this->stdout(
             "Checking database connection on DSN '{$dsn}' with user '{$root}'"
         );
 
-        // trying to connect to database with PDO (20 times, interval 1 second)
         try {
             // retry an operation up to 20 times
             $pdo = \igorw\retry(
                 $this->mysqlRetryMaxCount,
-                function () use ($dsn, $root, $root_password) {
+                function () use ($dsn, $root, $rootPassword) {
                     $this->stdout('.');
                     sleep($this->mysqlRetryTimeout);
-                    return new \PDO($dsn, $root, $root_password);
+                    return new \PDO($dsn, $root, $rootPassword);
                 }
             );
         } catch (FailingTooHardException $e) {
@@ -137,15 +159,14 @@ class MysqlController extends Controller
         $this->stdout(' [OK]');
 
 
+        // try to create a database for the user
         $this->stdout(
             "\nCreating database '{$db}' and granting permissions to user '{$user}' on DSN '{$dsn}' with user '{$root}'"
         );
-
         try {
-            // retry an operation up to 20 times
             \igorw\retry(
                 $this->mysqlRetryMaxCount,
-                function () use ($dsn, $root, $root_password, $pdo, $user, $pass, $db) {
+                function () use ($dsn, $root, $rootPassword, $pdo, $user, $pass, $db) {
                     $pdo->exec(
                         "CREATE DATABASE IF NOT EXISTS `$db`;
                  GRANT ALL ON `$db`.* TO '$user'@'%' IDENTIFIED BY '$pass';
