@@ -6,6 +6,7 @@ use igorw\FailingTooHardException;
 use mikehaertl\shellcommand\Command;
 use yii\console\Controller;
 use yii\console\Exception;
+use yii\helpers\Console;
 use yii\helpers\FileHelper;
 
 /**
@@ -229,28 +230,33 @@ class MysqlController extends Controller
      * @throws \yii\base\Exception
      */
     public function actionXDumpData(){
+        $fileName = $this->getFilePrefix()."_data.sql";
         $command = new Command('mysqldump');
 
         $command->addArg('-h',getenv('DB_PORT_3306_TCP_ADDR'));
         $command->addArg('-u',getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=',getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg('--no-create-info');
+        $this->stdout("Ignoring tables: ");
         foreach ($this->noDataTables as $table) {
             $command->addArg('--ignore-table',getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
+            $this->stdout("$table, ");
         }
+        $this->stdout("\n");
         $command->addArg(getenv('DB_ENV_MYSQL_DATABASE'));
 
         $command->execute();
 
         $dir = \Yii::getAlias('@runtime/mysql');
         FileHelper::createDirectory($dir);
-        $fileName= 'data.sql';
 
         $dump = $command->getOutput();
         $dump = preg_replace('/LOCK TABLES (.+) WRITE;/','LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;',$dump);
+        $file = $dir.'/'.$fileName;
 
-        file_put_contents($dir.'/'.$fileName, $dump);
-        $this->stdout('Done.');
+        file_put_contents($file, $dump);
+
+        $this->stdout("\nMySQL dump successfully written to '$file'\n", Console::FG_GREEN);
     }
 
     /**
@@ -306,14 +312,11 @@ class MysqlController extends Controller
         // generate file
         $dir = \Yii::getAlias('@runtime/mysql');
         FileHelper::createDirectory($dir);
-        $fileName = $date . '_' . getenv('DB_ENV_MYSQL_DATABASE') . '_' . $fileNameSuffix . '.sql';
+        $fileName = $this->getFilePrefix() . '_' . $fileNameSuffix . '.sql';
         $file     = $dir . '/' . $fileName;
         file_put_contents($file, $dump);
 
-        $this->stdout("\n");
-        $this->stdout('MYSQL Dump successfully saved to');
-        $this->stdout("\n" . $file);
-        $this->stdout("\n\n");
+        $this->stdout("\nMySQL dump successfully written to '$file'\n", Console::FG_GREEN);
     }
 
     /**
@@ -331,6 +334,10 @@ class MysqlController extends Controller
         } else {
             throw new Exception($command->getError());
         }
+    }
+
+    private function getFilePrefix(){
+        return \Yii::$app->id.'_'.YII_ENV.'_'.date('U');
     }
 
 }
