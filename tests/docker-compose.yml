@@ -4,39 +4,59 @@ services:
   nginx:
     image: phundament/nginx-one:1.9
     volumes_from:
-      - php
+      - phpfpm
     ports:
       - '80'
     depends_on:
-      - php
+      - phpfpm
+    networks:
+      - frontend
+      - internal
 
-  php:
+  phpfpm:
     image: phundament/app:4.2.0
     working_dir: /app/vendor/dmstr/yii2-db
+    command: sh -c 'chown -R 33 /app/web/assets && run.sh'
     depends_on:
-      - mariadb
+      - db
+      - seleniumfirefox
     environment:
       APP_NAME: dmstrdb
-      APP_TITLE: 'dmstr/yii2-db'
-      YII_ENV: 'prod'
+      APP_MIGRATION_LOOKUP: '@vendor/dmstr/yii2-db/tests/migrations'
+      APP_TITLE: 'dmstr/yii2-db TESTING'
+      YII_ENV: 'test'
       YII_DEBUG: 'false'
-      DB_PORT_3306_TCP_ADDR: mariadb
+      DB_PORT_3306_TCP_ADDR: db
       DB_PORT_3306_TCP_PORT: 3306
       DB_ENV_MYSQL_ROOT_USER: root
       DB_ENV_MYSQL_ROOT_PASSWORD: secretadmin
     volumes:
       - /app
       - ../:/app/vendor/dmstr/yii2-db
-      - ./runtime:/app/runtime
       #- ../tests/_config/local.php:/app/src/config/local.php
     networks:
-      default:
-        aliases:
-          - phpfpm
+      - internal
 
-  mariadb:
-    image: 'percona:5.7'
+  db:
+    image: 'percona:5.6'
     ports:
       - '3306'
     environment:
       MYSQL_ROOT_PASSWORD: secretadmin
+    networks:
+      - internal
+
+  seleniumfirefox:
+    image: 'selenium/standalone-firefox-debug:2.52.0'
+    expose:
+        - '4444'
+    ports:
+        - '5900'
+    networks:
+      - internal
+
+networks:
+  frontend:
+    driver: bridge
+  internal:
+    driver: bridge

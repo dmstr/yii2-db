@@ -67,7 +67,7 @@ Create a file migration class
     --templateFile='@vendor/dmstr/yii2-db/db/mysql/templates/file-migration.php' init_dump
 ```
 
-### dmstr\console\controllers\MysqlControllers
+### [dmstr\console\controllers](https://github.com/dmstr/yii2-db/blob/master/console/controllers)
 
 Include it in your console configuration
 
@@ -103,6 +103,59 @@ SUB-COMMANDS
 - db/dump             Dumps current database tables to runtime folder
 - db/index (default)  Displays tables in database
 ```
+
+Traits
+---
+
+### [dmstr\db\traits\ActiveRecordAccessTrait](https://github.com/dmstr/yii2-db/blob/master/db/traits/ActiveRecordAccessTrait.php)
+
+How to equip your active record model with access control
+
+- Use update migration in `db/migrations/m160609_090908_add_access_columns`
+
+    - set all `$tableNames` to be updated and run migration
+
+This migrations adds the available access check columns to your database table(s)
+
+```
+'access_owner',
+'access_read',
+'access_update',
+'access_delete',
+'access_domain',
+```
+
+- Add `use \dmstr\db\traits\ActiveRecordAccessTrait;` to your active record model
+
+- *(update your cruds)*
+
+
+**:secret: Congrats, you are now ready to manage specific access checks on your active records!**
+
+:bulb: Access options:
+
+- All access option -> {*}
+- specific rbac roles and permissions assignable
+    - single or multi
+        - `{*}`
+        - `{Role1},{Role2},{Permission1},...`
+        
+- limit access to specific domains / languages
+    - single or multi
+        - `{*}`
+        - `{de},{en},{fr},...`
+        
+- `Owner` access overrides other given permissions
+    - every active rocord can have exact one owner!
+
+Planned updates:
+---
+
+- ActiveRecordAccessTrait
+    -  in cruds use select2 multi for inputs (domain, read, update, delete)
+        - Setter: authItemArrayToString()
+        - Getter: authItemStringToArray()
+        
 
 ---
 
