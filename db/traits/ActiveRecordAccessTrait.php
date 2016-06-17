@@ -55,11 +55,11 @@ trait ActiveRecordAccessTrait
         // access read check
         $query->where(['or like', 'access_read', array_keys(self::getUsersAuthItems())]);
 
-        // owner check
-        $query->orWhere(['access_owner' => \Yii::$app->user->id]);
-
         // access domain check
         $query->andWhere(['or like', 'access_domain', array_keys(self::acceptedAccessDomain())]);
+
+        // owner check
+        $query->orWhere(['access_owner' => \Yii::$app->user->id]);
 
         return $query;
     }
@@ -74,7 +74,7 @@ trait ActiveRecordAccessTrait
             [
                 [['access_owner', 'access_domain', 'access_read', 'access_update', 'access_delete'], 'safe'],
                 [['access_domain', 'access_read', 'access_update', 'access_delete'], 'string', 'max' => 255],
-                [['access_domain', 'access_read', 'access_update', 'access_delete'], 'default', 'value' => self::mask(self::$_public)],
+                [['access_domain', 'access_read', 'access_update', 'access_delete'], 'default', 'value' => null],
                 [['access_owner'], 'integer'],
             ]
         );
