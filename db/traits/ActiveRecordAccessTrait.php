@@ -77,7 +77,7 @@ trait ActiveRecordAccessTrait
                 [['access_owner', 'access_domain', 'access_read', 'access_update', 'access_delete'], 'safe'],
                 [['access_domain', 'access_read', 'access_update', 'access_delete'], 'string', 'max' => 255],
                 [['access_domain', 'access_read', 'access_update', 'access_delete'], 'default', 'value' => null],
-                [['access_domain'], 'default', 'value' => self::$_public],
+                [['access_domain'], 'default', 'value' => \Yii::$app->language],
                 [['access_owner'], 'integer'],
             ]
         );
