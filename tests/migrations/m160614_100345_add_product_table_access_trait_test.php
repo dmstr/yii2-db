@@ -45,11 +45,11 @@ VALUES
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{*}',
+                'access_domain' => 'en',
                 'access_owner'  => '3',
-                'access_read'   => '{*}',
-                'access_update' => '{*}',
-                'access_delete' => '{*}',
+                'access_read'   => '*',
+                'access_update' => '*',
+                'access_delete' => '*',
             ]
         );
 
@@ -58,11 +58,11 @@ VALUES
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{*}',
+                'access_domain' => 'en',
                 'access_owner'  => '3',
-                'access_read'   => '{Editor}',
-                'access_update' => '{*}',
-                'access_delete' => '{*}',
+                'access_read'   => 'Editor',
+                'access_update' => '*',
+                'access_delete' => '*',
             ]
         );
 
@@ -71,11 +71,11 @@ VALUES
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{*}',
+                'access_domain' => 'en',
                 'access_owner'  => '3',
-                'access_read'   => '{*}',
-                'access_update' => '{Editor}',
-                'access_delete' => '{*}',
+                'access_read'   => '*',
+                'access_update' => 'Editor',
+                'access_delete' => '*',
             ]
         );
 
@@ -84,11 +84,11 @@ VALUES
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{*}',
+                'access_domain' => 'en',
                 'access_owner'  => '3',
-                'access_read'   => '{*}',
-                'access_update' => '{*}',
-                'access_delete' => '{Editor}',
+                'access_read'   => '*',
+                'access_update' => '*',
+                'access_delete' => 'Editor',
             ]
         );
 
@@ -97,11 +97,11 @@ VALUES
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{*}',
+                'access_domain' => 'en',
                 'access_owner'  => '2',
-                'access_read'   => '{Supervisor}',
-                'access_update' => '{Supervisor}',
-                'access_delete' => '{Supervisor}',
+                'access_read'   => 'Supervisor',
+                'access_update' => 'Supervisor',
+                'access_delete' => 'Supervisor',
             ]
         );
 
@@ -110,11 +110,11 @@ VALUES
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{de}',
+                'access_domain' => 'de',
                 'access_owner'  => '3',
-                'access_read'   => '{*}',
-                'access_update' => '{*}',
-                'access_delete' => '{*}',
+                'access_read'   => '*',
+                'access_update' => '*',
+                'access_delete' => '*',
             ]
         );
         // access domain
@@ -122,33 +122,33 @@ VALUES
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{en}',
+                'access_domain' => 'en',
                 'access_owner'  => '3',
-                'access_read'   => '{*}',
-                'access_update' => '{*}',
-                'access_delete' => '{*}',
+                'access_read'   => '*',
+                'access_update' => '*',
+                'access_delete' => '*',
             ]
         );
         $this->insert(
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{en}',
+                'access_domain' => 'de',
                 'access_owner'  => '3',
-                'access_read'   => '{Supervisor}',
-                'access_update' => '{Supervisor}',
-                'access_delete' => '{Supervisor}',
+                'access_read'   => 'Editor',
+                'access_update' => 'Supervisor',
+                'access_delete' => 'Supervisor',
             ]
         );
         $this->insert(
             $this->tableName,
             [
                 'title'         => 'Product',
-                'access_domain' => '{fr},{de}',
+                'access_domain' => 'fr',
                 'access_owner'  => '3',
-                'access_read'   => '{*}',
-                'access_update' => '{Supervisor}',
-                'access_delete' => '{Supervisor}',
+                'access_read'   => '*',
+                'access_update' => 'Supervisor',
+                'access_delete' => 'Supervisor',
             ]
         );
     }

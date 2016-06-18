@@ -52,14 +52,16 @@ trait ActiveRecordAccessTrait
         /** @var $query \yii\db\ActiveQuery */
         $query = parent::find();
 
+        // access owner check
+        $query->where(['access_owner' => \Yii::$app->user->id]);
+
         // access read check
-        $query->where(['or like', 'access_read', array_keys(self::getUsersAuthItems())]);
+        foreach (array_keys(self::getUsersAuthItems()) as $authItem) {
+            $query->orWhere('FIND_IN_SET("' . $authItem . '", access_read)');
+        }
 
         // access domain check
-        $query->andWhere(['or like', 'access_domain', array_keys(self::acceptedAccessDomain())]);
-
-        // owner check
-        $query->orWhere(['access_owner' => \Yii::$app->user->id]);
+        $query->andWhere(['access_domain' => \Yii::$app->language]);
 
         return $query;
     }
@@ -75,6 +77,7 @@ trait ActiveRecordAccessTrait
                 [['access_owner', 'access_domain', 'access_read', 'access_update', 'access_delete'], 'safe'],
                 [['access_domain', 'access_read', 'access_update', 'access_delete'], 'string', 'max' => 255],
                 [['access_domain', 'access_read', 'access_update', 'access_delete'], 'default', 'value' => null],
+                [['access_domain'], 'default', 'value' => self::$_public],
                 [['access_owner'], 'integer'],
             ]
         );
@@ -119,7 +122,7 @@ trait ActiveRecordAccessTrait
      */
     public static function allAccess()
     {
-        return [self::mask(self::$_public) => self::$_public];
+        return [self::$_public => self::$_public];
     }
 
     /**
@@ -146,7 +149,7 @@ trait ActiveRecordAccessTrait
                     } else {
                         $description = $name;
                     }
-                    $authRoles[self::mask($name)] = $description;
+                    $authRoles[$name] = $description;
                 }
 
                 // All permissions
@@ -157,7 +160,7 @@ trait ActiveRecordAccessTrait
                     } else {
                         $description = $name;
                     }
-                    $authPermissions[self::mask($name)] = $description;
+                    $authPermissions[$name] = $description;
                 }
 
                 // All auth items
@@ -168,22 +171,13 @@ trait ActiveRecordAccessTrait
                 // Users auth items
                 $authItems = [];
                 foreach (\Yii::$app->authManager->getAssignments(\Yii::$app->user->id) as $name => $item) {
-                    $authItems[self::mask($name)] = $authManager->getItem($item->roleName)->description;
+                    $authItems[$name] = $authManager->getItem($item->roleName)->description;
                 }
             }
 
             return array_merge($publicAuthItem, $authItems);
         }
         return $publicAuthItem;
-    }
-
-    /**
-     * Currrent application language and * for all access_domains
-     * @return array
-     */
-    public static function acceptedAccessDomain()
-    {
-        return ArrayHelper::merge([self::mask(\Yii::$app->language) => \Yii::$app->language], self::allAccess());
     }
 
     /**
@@ -194,7 +188,7 @@ trait ActiveRecordAccessTrait
     {
         $languages = self::allAccess();
         foreach (\Yii::$app->urlManager->languages as $language) {
-            $languages[self::mask($language)] = $language;
+            $languages[$language] = $language;
         }
 
         return $languages;
@@ -229,6 +223,7 @@ trait ActiveRecordAccessTrait
 
     /**
      * Decode items from array to csv
+     *
      * @param $itemArray
      *
      * @return string
@@ -240,22 +235,20 @@ trait ActiveRecordAccessTrait
 
     /**
      * Encode item from csv to array
+     *
      * @param $itemString
      *
      * @return array
      */
     public function authItemStringToArray($itemString)
     {
-        $arr = [];
-        foreach (explode(',', $itemString) as $item) {
-            $arr[$item] = self::unmask($item);
-        }
-
-        return $arr;
+        $arr = explode(',', $itemString);
+        return array_combine($arr, $arr);
     }
 
     /**
      * Check permission for record
+     *
      * @param null $action
      *
      * @return bool
@@ -277,29 +270,8 @@ trait ActiveRecordAccessTrait
     }
 
     /**
-     * Mask a given string into {$item}
-     * @param $item
-     *
-     * @return string
-     */
-    private static function mask($item)
-    {
-        return '{' . $item . '}';
-    }
-
-    /**
-     * Unmask a given string from {$item} to $item
-     * @param $item
-     *
-     * @return string
-     */
-    private static function unmask($item)
-    {
-        return str_replace('{', '', str_replace('}', '', $item));
-    }
-
-    /**
      * Set error flash for controller action id
+     *
      * @param string $action
      *
      * @return bool|false

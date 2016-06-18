@@ -134,18 +134,16 @@ This migrations adds the available access check columns to your database table(s
 
 :bulb: Access options:
 
-- All access option -> {*}
+- All access option `*`
 - specific rbac roles and permissions assignable
     - single or multi
-        - `{*}`
-        - `{Role1},{Role2},{Permission1},...`
+        - `*`
+        - `Role1,Role2,Permission1,...`
         
-- limit access to specific domains / languages
-    - single or multi
-        - `{*}`
-        - `{de},{en},{fr},...`
+- limit access to specific domain / language
+    - `de` or `en`
         
-- `Owner` access overrides other given permissions
+- `Owner` gets all access over other given permissions
     - every active rocord can have exact one owner!
 
 Planned updates:
