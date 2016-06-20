@@ -28,6 +28,12 @@ use yii\helpers\ArrayHelper;
 trait ActiveRecordAccessTrait
 {
     /**
+     * Use session flash messages
+     * @var bool
+     */
+    public $enableFlashMessages = true;
+
+    /**
      * Public / all access
      * @var string
      */
@@ -278,14 +284,20 @@ trait ActiveRecordAccessTrait
      */
     private function addAccessError($action)
     {
-        \Yii::$app->session->addFlash(
-            'danger',
-            \Yii::t(
-                'app',
-                'You are not allowed to {0} record #{1}',
-                [$action, $this->primaryKey]
-            )
+        $msg = \Yii::t(
+            'app',
+            'You are not allowed to {0} record #{1}',
+            [$action, $this->primaryKey]
         );
+
+        if ($this->flashMessages) {
+            \Yii::$app->session->addFlash(
+                'danger',
+                $msg
+            );
+        } else {
+            \Yii::error($msg, __METHOD__);
+        }
         return false;
     }
 }
