@@ -290,7 +290,7 @@ trait ActiveRecordAccessTrait
             [$action, $this->primaryKey]
         );
 
-        if ($this->flashMessages) {
+        if ($this->enableFlashMessages) {
             \Yii::$app->session->addFlash(
                 'danger',
                 $msg
