@@ -144,7 +144,7 @@ This migrations adds the available access check columns to your database table(s
     - `de` or `en`
         
 - `Owner` gets all access over other given permissions
-    - every active rocord can have exact one owner!
+    - every active record can have exact one owner right which stands above `access_read`, `access_update`, `access_delete`
 
 Planned updates:
 ---
