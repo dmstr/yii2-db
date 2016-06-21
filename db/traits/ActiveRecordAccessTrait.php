@@ -102,7 +102,7 @@ trait ActiveRecordAccessTrait
             return true;
         }
 
-        if (!$this->grandPermission('access_update')) {
+        if (!$this->hasPermission('access_update')) {
             $this->addAccessError('update');
         } else {
             return true;
@@ -116,7 +116,7 @@ trait ActiveRecordAccessTrait
     {
         parent::beforeDelete();
 
-        if (!$this->grandPermission('access_delete')) {
+        if (!$this->hasPermission('access_delete')) {
             $this->addAccessError('delete');
         } else {
             return true;
@@ -259,7 +259,7 @@ trait ActiveRecordAccessTrait
      *
      * @return bool
      */
-    private function grandPermission($action = null)
+    private function hasPermission($action = null)
     {
         if ($action === null && !in_array($action, self::$_availableAccessColumns)) {
             return false;
