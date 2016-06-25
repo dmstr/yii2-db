@@ -31,7 +31,13 @@ trait ActiveRecordAccessTrait
      * Use session flash messages
      * @var bool
      */
-    public $enableFlashMessages = true;
+    public static $enableFlashMessages = true;
+
+    /**
+     * Active find, beforeSave, beforeDelete
+     * @var bool
+     */
+    public static $activeAccessTrait = true;
 
     /**
      * Public / all access
@@ -58,16 +64,18 @@ trait ActiveRecordAccessTrait
         /** @var $query \yii\db\ActiveQuery */
         $query = parent::find();
 
-        // access owner check
-        $query->where(['access_owner' => \Yii::$app->user->id]);
+        if (self::$activeAccessTrait) {
+            // access owner check
+            $query->where(['access_owner' => \Yii::$app->user->id]);
 
-        // access read check
-        foreach (array_keys(self::getUsersAuthItems()) as $authItem) {
-            $query->orWhere('FIND_IN_SET("' . $authItem . '", access_read)');
+            // access read check
+            foreach (array_keys(self::getUsersAuthItems()) as $authItem) {
+                $query->orWhere('FIND_IN_SET("' . $authItem . '", access_read)');
+            }
+
+            // access domain check
+            $query->andWhere(['access_domain' => \Yii::$app->language]);
         }
-
-        // access domain check
-        $query->andWhere(['access_domain' => \Yii::$app->language]);
 
         return $query;
     }
@@ -102,8 +110,12 @@ trait ActiveRecordAccessTrait
             return true;
         }
 
-        if (!$this->hasPermission('access_update')) {
-            $this->addAccessError('update');
+        if (self::$activeAccessTrait) {
+            if (!$this->hasPermission('access_update')) {
+                $this->addAccessError('update');
+            } else {
+                return true;
+            }
         } else {
             return true;
         }
@@ -116,8 +128,12 @@ trait ActiveRecordAccessTrait
     {
         parent::beforeDelete();
 
-        if (!$this->hasPermission('access_delete')) {
-            $this->addAccessError('delete');
+        if (self::$activeAccessTrait) {
+            if (!$this->hasPermission('access_delete')) {
+                $this->addAccessError('delete');
+            } else {
+                return true;
+            }
         } else {
             return true;
         }
@@ -270,8 +286,8 @@ trait ActiveRecordAccessTrait
         }
         // check assigned permissions
         if (!empty(array_intersect(array_keys(self::getUsersAuthItems()), explode(',', $this->{$action})))) {
-        return true;
-    }
+            return true;
+        }
 
         return false;
     }
@@ -291,7 +307,7 @@ trait ActiveRecordAccessTrait
             [$action, $this->primaryKey]
         );
 
-        if ($this->enableFlashMessages) {
+        if (self::$enableFlashMessages) {
             \Yii::$app->session->addFlash(
                 'danger',
                 $msg
