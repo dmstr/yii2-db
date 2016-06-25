@@ -265,7 +265,7 @@ trait ActiveRecordAccessTrait
             return false;
         }
         // owner check
-        if ($this->access_owner == \Yii::$app->user->id) {
+        if (!\Yii::$app->user->isGuest && $this->access_owner === \Yii::$app->user->id) {
             return true;
         }
         // check assigned permissions
