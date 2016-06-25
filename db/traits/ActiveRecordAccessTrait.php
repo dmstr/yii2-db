@@ -259,7 +259,7 @@ trait ActiveRecordAccessTrait
      *
      * @return bool
      */
-    private function hasPermission($action = null)
+    public function hasPermission($action = null)
     {
         if ($action === null && !in_array($action, self::$_availableAccessColumns)) {
             return false;
