@@ -84,6 +84,7 @@ trait ActiveRecordAccessTrait
                 [['access_domain', 'access_read', 'access_update', 'access_delete'], 'string', 'max' => 255],
                 [['access_domain', 'access_read', 'access_update', 'access_delete'], 'default', 'value' => null],
                 [['access_domain'], 'default', 'value' => \Yii::$app->language],
+                [['access_owner'], 'default', 'value' => \Yii::$app->user->id],
                 [['access_owner'], 'integer'],
             ]
         );
@@ -98,7 +99,6 @@ trait ActiveRecordAccessTrait
 
         // return true for new records
         if ($insert) {
-            $this->access_owner = \Yii::$app->user->id;
             return true;
         }
 
