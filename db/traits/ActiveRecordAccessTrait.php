@@ -269,10 +269,11 @@ trait ActiveRecordAccessTrait
             return true;
         }
         // check assigned permissions
-        if (empty(array_intersect(array_keys(self::getUsersAuthItems()), explode(',', $this->{$action})))) {
-            return false;
-        }
+        if (!empty(array_intersect(array_keys(self::getUsersAuthItems()), explode(',', $this->{$action})))) {
         return true;
+    }
+
+        return false;
     }
 
     /**
