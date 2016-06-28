@@ -202,8 +202,8 @@ trait ActiveRecordAccessTrait
                     // add ond child layer
                     foreach ($authManager->getChildren($item->roleName) as $childName => $childItem) {
                         $authItems[$childName] = $authManager->getItem($childItem->name)->description;
+                    }
                 }
-            }
             }
             $items = array_merge($publicAuthItem, $authItems);
             return $items;
@@ -253,27 +253,32 @@ trait ActiveRecordAccessTrait
     }
 
     /**
-     * Decode items from array to csv
+     * Decode access column by action from csv to array
      *
-     * @param $itemArray
+     * @param $action
      *
-     * @return string
+     * @return string|null
      */
-    public function authItemArrayToString($itemArray)
+    public function authItemArrayToString($action)
     {
-        return implode(',', array_keys($itemArray));
+        if (!in_array($action, self::$_availableAccessColumns)) {
+            return null;
+        }
+        return implode(',', array_keys($this->$action));
     }
 
     /**
-     * Encode item from csv to array
+     * Encode access column by action from csv to array
+     * @param $action
      *
-     * @param $itemString
-     *
-     * @return array
+     * @return array|null
      */
-    public function authItemStringToArray($itemString)
+    public function authItemStringToArray($action)
     {
-        $arr = explode(',', $itemString);
+        if (!in_array($action, self::$_availableAccessColumns)) {
+            return null;
+        }
+        $arr = explode(',', $this->$action);
         return array_combine($arr, $arr);
     }
 
