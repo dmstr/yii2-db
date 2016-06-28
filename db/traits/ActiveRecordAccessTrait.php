@@ -255,16 +255,18 @@ trait ActiveRecordAccessTrait
     /**
      * Decode access column by action from csv to array
      *
-     * @param $action
+     * @param string $action
+     * @param array $authItems
      *
      * @return string|null
      */
-    public function authItemArrayToString($action)
+    public function authItemArrayToString($action, array $authItems)
     {
         if (!in_array($action, self::$_availableAccessColumns)) {
             return null;
         }
-        return implode(',', array_keys($this->$action));
+
+        $this->{$action} = implode(',', array_keys($authItems));
     }
 
     /**
