@@ -9,9 +9,6 @@ services:
       - '80'
     depends_on:
       - phpfpm
-    networks:
-      - frontend
-      - internal
 
   phpfpm:
     image: phundament/app:4.2.0
@@ -34,8 +31,6 @@ services:
       - /app
       - ../:/app/vendor/dmstr/yii2-db
       #- ../tests/_config/local.php:/app/src/config/local.php
-    networks:
-      - internal
 
   db:
     image: 'percona:5.6'
@@ -43,8 +38,6 @@ services:
       - '3306'
     environment:
       MYSQL_ROOT_PASSWORD: secretadmin
-    networks:
-      - internal
 
   seleniumfirefox:
     image: 'selenium/standalone-firefox-debug:2.52.0'
@@ -52,11 +45,4 @@ services:
         - '4444'
     ports:
         - '5900'
-    networks:
-      - internal
 
-networks:
-  frontend:
-    driver: bridge
-  internal:
-    driver: bridge
