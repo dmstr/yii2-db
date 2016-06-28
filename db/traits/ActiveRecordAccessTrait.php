@@ -196,11 +196,17 @@ trait ActiveRecordAccessTrait
                 // Users auth items
                 $authItems = [];
                 foreach (\Yii::$app->authManager->getAssignments(\Yii::$app->user->id) as $name => $item) {
+
                     $authItems[$name] = $authManager->getItem($item->roleName)->description;
+
+                    // add ond child layer
+                    foreach ($authManager->getChildren($item->roleName) as $childName => $childItem) {
+                        $authItems[$childName] = $authManager->getItem($childItem->name)->description;
                 }
             }
-
-            return array_merge($publicAuthItem, $authItems);
+            }
+            $items = array_merge($publicAuthItem, $authItems);
+            return $items;
         }
         return $publicAuthItem;
     }
