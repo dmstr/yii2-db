@@ -247,6 +247,11 @@ class MysqlController extends Controller
 
         $command->execute();
 
+        if ($command->getError()) {
+            $this->stderr($command->getError()."\n");
+            \Yii::$app->end(1);
+        }
+
         $dir = \Yii::getAlias('@runtime/mysql');
         FileHelper::createDirectory($dir);
 
