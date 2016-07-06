@@ -199,7 +199,7 @@ trait ActiveRecordAccessTrait
 
                     $authItems[$name] = $authManager->getItem($item->roleName)->description;
 
-                    // add ond child layer
+                    // add one child layer
                     foreach ($authManager->getChildren($item->roleName) as $childName => $childItem) {
                         $authItems[$childName] = $authManager->getItem($childItem->name)->description;
                     }
