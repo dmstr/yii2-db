@@ -11,6 +11,8 @@ else
 	DOCKER_HOST_IP  ?= 127.0.0.1
 endif
 
+all: clean up setup
+
 up:
 	$(DOCKER_COMPOSE) up -d
 
@@ -30,5 +32,5 @@ bash:	 ##@docker open application development bash
 
 setup:	 ##@docker open application development bash
 	$(DOCKER_COMPOSE) run --rm phpfpm yii db/create
-	$(DOCKER_COMPOSE) run --rm phpfpm yii migrate
+	$(DOCKER_COMPOSE) run --rm phpfpm yii migrate --interactive=0
 	$(DOCKER_COMPOSE) run --rm phpfpm yii user/create admin@example.com admin secret
