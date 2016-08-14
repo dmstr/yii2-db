@@ -17,7 +17,8 @@
   ],
   "require": {
     "mikehaertl/php-shellcommand": "1.*",
-    "yiisoft/yii2": "2.*"
+    "yiisoft/yii2": "2.*",
+    "igorw/retry" : "*"
   },
   "autoload": {
     "psr-4": {
