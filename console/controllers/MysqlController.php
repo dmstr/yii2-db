@@ -276,7 +276,6 @@ class MysqlController extends Controller
     {
         $command        = new Command('mysqldump');
         $fileNameSuffix = 'schema-data';
-        $date           = date('U');
         $truncateTable  = '';
 
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
@@ -342,7 +341,7 @@ class MysqlController extends Controller
     }
 
     private function getFilePrefix(){
-        return \Yii::$app->id.'_'.YII_ENV.'_'.date('U');
+        return 'd_'.gmdate('ymd_His').'_'.\Yii::$app->id.'_'.YII_ENV;
     }
 
 }
