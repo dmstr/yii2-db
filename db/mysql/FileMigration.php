@@ -9,6 +9,7 @@
 
 namespace dmstr\db\mysql;
 
+use mikehaertl\shellcommand\Command;
 use yii\base\Exception;
 use yii\db\Migration;
 
@@ -54,9 +55,15 @@ class FileMigration extends Migration
             $port = "3306";
         }
 
-        $command      = "{$this->mysqlExecutable} -h{$hostName} -P{$port} -u{$this->db->username} -p{$this->db->password} {$databaseName} < \"{$this->file}\"";
-        echo "    ".$command . "\n"; // TODO echo only with --verbose
-        exec($command, $output, $return);
+        $command = new Command($this->mysqlExecutable);
+        $command->addArg('-h', $hostName);
+        $command->addArg('-P', $port);
+        $command->addArg('-u', $this->db->username);
+        $command->addArg('--password=', $this->db->password);
+
+        $cmd      = $command->getExecCommand()." \"{$databaseName}\" < \"{$this->file}\"";
+        #echo "    ".$cmd . "\n"; // TODO echo only with --verbose
+        exec($cmd, $output, $return);
 
         if ($return !== 0) {
             //var_dump($output, $return);
