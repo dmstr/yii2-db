@@ -341,7 +341,7 @@ class MysqlController extends Controller
     }
 
     private function getFilePrefix(){
-        return 'd_'.gmdate('ymd_His').'_'.\Yii::$app->id.'_'.YII_ENV;
+        return 'm'.gmdate('ymd_His').'_'.\Yii::$app->id.(defined('APP_VERSION')?'_'.APP_VERSION:'');
     }
 
 }
