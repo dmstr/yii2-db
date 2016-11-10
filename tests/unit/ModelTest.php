@@ -260,8 +260,8 @@ class Product extends ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id'    => Yii::t('app', 'ID'),
-            'title' => Yii::t('app', 'Title'),
+            'id'    => Yii::t('test-yii2-db', 'ID'),
+            'title' => Yii::t('test-yii2-db', 'Title'),
         ];
     }
 }
