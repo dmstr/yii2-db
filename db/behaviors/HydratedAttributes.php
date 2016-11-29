@@ -20,6 +20,8 @@ use yii\db\ActiveRecord;
  */
 class HydratedAttributes extends Behavior
 {
+    public $keyAttribute;
+
     private $_m;
     private $_d;
 
@@ -43,7 +45,11 @@ class HydratedAttributes extends Behavior
                 foreach ($relation AS $rModel) {
                     $d = $rModel->attributes;
                     $this->parseAttributesRecursive($rModel, $d);
-                    $attributes[$name][] = $d;
+                    if ($this->keyAttribute) {
+                        $attributes[$name][$d[$this->keyAttribute]] = $d;
+                    } else {
+                        $attributes[$name][] = $d;
+                    }
                 }
             } else {
                 if ($relation instanceof ActiveRecord) {
