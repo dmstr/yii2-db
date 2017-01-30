@@ -11,6 +11,7 @@ namespace dmstr\db\behaviors;
 
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
+use yii\db\Exception;
 
 
 /**
@@ -20,6 +21,9 @@ use yii\db\ActiveRecord;
  */
 class HydratedAttributes extends Behavior
 {
+    /**
+     * @var column to use for array keys; has to be unique
+     */
     public $keyAttribute;
 
     private $_m;
@@ -45,8 +49,13 @@ class HydratedAttributes extends Behavior
                 foreach ($relation AS $rModel) {
                     $d = $rModel->attributes;
                     $this->parseAttributesRecursive($rModel, $d);
-                    if ($this->keyAttribute) {
-                        $attributes[$name][$d[$this->keyAttribute]] = $d;
+                    // create index from column (Note: column has to be unique)
+                    if ($rModel->getBehavior('hydratedAttributes') && $rModel->keyAttribute) {
+                        if (isset($attributes[$name][$d[$rModel->keyAttribute]])) {
+                            throw new Exception("Index '{$d[$rModel->keyAttribute]}' not unique");
+                        } else {
+                            $attributes[$name][$d[$rModel->keyAttribute]] = $d;
+                        }
                     } else {
                         $attributes[$name][] = $d;
                     }
