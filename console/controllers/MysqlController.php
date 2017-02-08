@@ -226,10 +226,10 @@ class MysqlController extends Controller
     }
 
     /**
-     * EXPERIMENTAL: data only dump
+     * export data tables, without logs and caches
      * @throws \yii\base\Exception
      */
-    public function actionXDumpData(){
+    public function actionExport(){
         $fileName = $this->getFilePrefix()."_data.sql";
         $command = new Command('mysqldump');
 
@@ -262,6 +262,14 @@ class MysqlController extends Controller
         file_put_contents($file, $dump);
 
         $this->stdout("\nMySQL dump successfully written to '$file'\n", Console::FG_GREEN);
+    }
+
+    /**
+     * Deprecated - alias for export
+     */
+    public function actionXDumpData(){
+        \Yii::warning('x-dump-data is deprecated, please use export', __METHOD__);
+        return $this->actionExport();
     }
 
     /**
