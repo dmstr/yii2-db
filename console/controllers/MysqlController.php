@@ -228,6 +228,7 @@ class MysqlController extends Controller
     /**
      * export data tables, without logs and caches
      * @throws \yii\base\Exception
+     * @since 0.8.0
      */
     public function actionExport(){
         $fileName = $this->getFilePrefix()."_data.sql";
