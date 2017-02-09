@@ -14,14 +14,6 @@ use yii\helpers\ArrayHelper;
 /**
  * Trait ActiveRecordAccessTrait
  *
- * @property integer $access_owner
- * @property string $access_read
- * @property string $access_update
- * @property string $access_delete
- * @property string $access_domain
- *
- *
- *
  * @package dmstr\db\traits
  * @author Christopher Stebe <c.stebe@herzogkommunikation.de>
  */
@@ -46,15 +38,18 @@ trait ActiveRecordAccessTrait
     private static $_public = '*';
 
     /**
-     * @var array with access field names
+     * @return array with access field names
      */
-    private static $_availableAccessColumns = [
-        'access_owner',
-        'access_read',
-        'access_update',
-        'access_delete',
-        'access_domain',
-    ];
+    public static function accessColumnAttributes()
+    {
+        return [
+            'owner'  => 'access_owner',
+            'read'   => 'access_read',
+            'update' => 'access_update',
+            'delete' => 'access_delete',
+            'domain' => 'access_domain',
+        ];
+    }
 
     /**
      * @inheritdoc
@@ -64,17 +59,28 @@ trait ActiveRecordAccessTrait
         /** @var $query \yii\db\ActiveQuery */
         $query = parent::find();
 
+        $accessOwner  = self::accessColumnAttributes()['owner'];
+        $accessRead   = self::accessColumnAttributes()['read'];
+        $accessDomain = self::accessColumnAttributes()['domain'];
+
         if (self::$activeAccessTrait) {
+
             // access owner check
-            $query->where(['access_owner' => \Yii::$app->user->id]);
+            if ($accessOwner) {
+                $query->where([$accessOwner => \Yii::$app->user->id]);
+            }
 
             // access read check
-            foreach (array_keys(self::getUsersAuthItems()) as $authItem) {
-                $query->orWhere('FIND_IN_SET("' . $authItem . '", access_read)');
+            if ($accessRead) {
+                foreach (array_keys(self::getUsersAuthItems()) as $authItem) {
+                    $query->orWhere('FIND_IN_SET("' . $authItem . '", ' . $accessRead . ')');
+                }
             }
 
             // access domain check
-            $query->andWhere(['access_domain' => \Yii::$app->language]);
+            if ($accessDomain) {
+                $query->andWhere([$accessDomain => \Yii::$app->language]);
+            }
         }
 
         return $query;
@@ -85,14 +91,57 @@ trait ActiveRecordAccessTrait
      */
     public function rules()
     {
+        $accessOwner  = self::accessColumnAttributes()['owner'];
+        $accessRead   = self::accessColumnAttributes()['read'];
+        $accessUpdate = self::accessColumnAttributes()['update'];
+        $accessDelete = self::accessColumnAttributes()['delete'];
+        $accessDomain = self::accessColumnAttributes()['domain'];
+
+        // safe validator
+        $safe = [];
+
+        // string validator
+        $string = [];
+
+        // default validator
+        $default = [];
+
+        // integer validator
+        $integer = [];
+
+        // add used attributes to validation rules
+        if ($accessOwner) {
+            array_push($safe, $accessOwner);
+            array_push($integer, $accessOwner);
+        }
+        if ($accessRead) {
+            array_push($safe, $accessRead);
+            array_push($string, $accessRead);
+            array_push($default, $accessRead);
+        }
+        if ($accessUpdate) {
+            array_push($safe, $accessUpdate);
+            array_push($string, $accessUpdate);
+            array_push($default, $accessUpdate);
+        }
+        if ($accessDelete) {
+            array_push($safe, $accessDelete);
+            array_push($string, $accessDelete);
+            array_push($default, $accessDelete);
+        }
+        if ($accessDomain) {
+            array_push($safe, $accessDomain);
+            array_push($string, $accessDomain);
+            array_push($default, $accessDomain);
+        }
+
         return ArrayHelper::merge(
             parent::rules(),
             [
-                [['access_owner', 'access_domain', 'access_read', 'access_update', 'access_delete'], 'safe'],
-                [['access_domain', 'access_read', 'access_update', 'access_delete'], 'string', 'max' => 255],
-                [['access_domain', 'access_read', 'access_update', 'access_delete'], 'default', 'value' => null],
-                [['access_domain'], 'default', 'value' => \Yii::$app->language],
-                [['access_owner'], 'integer'],
+                [$safe, 'safe'],
+                [$string, 'string', 'max' => 255],
+                [$default, 'default', 'value' => null],
+                [$integer, 'integer']
             ]
         );
     }
@@ -111,10 +160,11 @@ trait ActiveRecordAccessTrait
             }
             return true;
         }
-
-        if (self::$activeAccessTrait) {
-            if (!$this->hasPermission('access_update')) {
+        $accessUpdate = self::accessColumnAttributes()['update'];
+        if (self::$activeAccessTrait && $accessUpdate) {
+            if (!$this->hasPermission($accessUpdate)) {
                 $this->addAccessError('update');
+                return false;
             } else {
                 return true;
             }
@@ -130,9 +180,11 @@ trait ActiveRecordAccessTrait
     {
         parent::beforeDelete();
 
-        if (self::$activeAccessTrait) {
-            if (!$this->hasPermission('access_delete')) {
+        $accessDelete = self::accessColumnAttributes()['delete'];
+        if (self::$activeAccessTrait && $accessDelete) {
+            if (!$this->hasPermission($accessDelete)) {
                 $this->addAccessError('delete');
+                return false;
             } else {
                 return true;
             }
@@ -211,47 +263,6 @@ trait ActiveRecordAccessTrait
     }
 
     /**
-     * For use with yii2-giiant OptsProvider
-     * @return array available access domains
-     */
-    public static function optsAccessDomain()
-    {
-        $languages = self::allAccess();
-        foreach (\Yii::$app->urlManager->languages as $language) {
-            $languages[$language] = $language;
-        }
-
-        return $languages;
-    }
-
-    /**
-     * For use with yii2-giiant OptsProvider
-     * @return array available read accesses
-     */
-    public static function optsAccessRead()
-    {
-        return self::getUsersAuthItems();
-    }
-
-    /**
-     * For use with yii2-giiant OptsProvider
-     * @return array available update accesses
-     */
-    public static function optsAccessUpdate()
-    {
-        return self::getUsersAuthItems();
-    }
-
-    /**
-     * For use with yii2-giiant OptsProvider
-     * @return array available delete accesses
-     */
-    public static function optsAccessDelete()
-    {
-        return self::getUsersAuthItems();
-    }
-
-    /**
      * Decode access column by action from csv to array
      *
      * @param string $action
@@ -261,7 +272,7 @@ trait ActiveRecordAccessTrait
      */
     public function authItemArrayToString($action, array $authItems)
     {
-        if (!in_array($action, self::$_availableAccessColumns)) {
+        if (!in_array($action, self::accessColumnAttributes())) {
             return null;
         }
 
@@ -276,7 +287,7 @@ trait ActiveRecordAccessTrait
      */
     public function authItemStringToArray($action)
     {
-        if (!in_array($action, self::$_availableAccessColumns)) {
+        if (!in_array($action, self::accessColumnAttributes())) {
             return null;
         }
         $arr = explode(',', $this->$action);
@@ -292,7 +303,7 @@ trait ActiveRecordAccessTrait
      */
     public function hasPermission($action = null)
     {
-        if ($action === null && !in_array($action, self::$_availableAccessColumns)) {
+        if ($action === null && !in_array($action, self::accessColumnAttributes())) {
             return false;
         }
         // owner check
@@ -330,6 +341,5 @@ trait ActiveRecordAccessTrait
         } else {
             \Yii::error($msg, __METHOD__);
         }
-        return false;
     }
 }

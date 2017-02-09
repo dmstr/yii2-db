@@ -109,6 +109,8 @@ Traits
 
 ### [dmstr\db\traits\ActiveRecordAccessTrait](https://github.com/dmstr/yii2-db/blob/master/db/traits/ActiveRecordAccessTrait.php)
 
+**Option 1:**
+
 How to equip your active record model with access control
 
 - Use update migration in `db/migrations/m160609_090908_add_access_columns`
@@ -129,6 +131,39 @@ This migrations adds the available access check columns to your database table(s
 
 - *(update your cruds)*
 
+
+
+**Option 2:**
+
+Simply override this method in our AR model and set the access fields you have/want to the field names you have/want!
+
+*Default:*
+```
+public static function accessColumnAttributes()
+{
+   return [
+       'owner'  => 'access_owner',
+       'read'   => 'access_read',
+       'update' => 'access_update',
+       'delete' => 'access_delete',
+       'domain' => 'access_domain',
+   ];
+}
+```
+
+*Customize:*
+```
+public static function accessColumnAttributes()
+{
+    return [
+        'owner'  => 'user_id',			 // the column name with owner permissions
+        'read'   => 'read_permission',	 // the column name with read permissions
+        'update' => false, 				// will do no access checks for update
+        'delete' => false, 				// will do no access checks for delete
+        'domain' => 'language',			// the column name with the access domain permission
+    ];
+}
+```
 
 **:secret: Congrats, you are now ready to manage specific access checks on your active records!**
 
