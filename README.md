@@ -156,8 +156,8 @@ public static function accessColumnAttributes()
 public static function accessColumnAttributes()
 {
     return [
-        'owner'  => 'user_id',			 // the column name with owner permissions
-        'read'   => 'read_permission',	 // the column name with read permissions
+        'owner'  => 'user_id',			// the column name with owner permissions
+        'read'   => 'read_permission',	// the column name with read permissions
         'update' => false, 				// will do no access checks for update
         'delete' => false, 				// will do no access checks for delete
         'domain' => 'language',			// the column name with the access domain permission

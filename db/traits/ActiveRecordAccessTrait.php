@@ -72,14 +72,14 @@ trait ActiveRecordAccessTrait
 
             // access read check
             if ($accessRead) {
-                foreach (array_keys(self::getUsersAuthItems()) as $authItem) {
-                    $query->orWhere('FIND_IN_SET("' . $authItem . '", ' . $accessRead . ')');
-                }
+                $queryType = ($accessOwner) ? 'orWhere' : 'where';
+                $authItems = implode(',', array_keys(self::getUsersAuthItems()));
+                $query->$queryType('FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0');
             }
 
             // access domain check
             if ($accessDomain) {
-                $query->andWhere([$accessDomain => \Yii::$app->language]);
+                $query->andWhere([$accessDomain => [\Yii::$app->language, self::$_public]]);
             }
         }
 
