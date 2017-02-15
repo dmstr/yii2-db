@@ -35,7 +35,7 @@ trait ActiveRecordAccessTrait
      * Public / all access
      * @var string
      */
-    private static $_public = '*';
+    private static $_all = '*';
 
     /**
      * @return array with access field names
@@ -79,7 +79,7 @@ trait ActiveRecordAccessTrait
 
             // access domain check
             if ($accessDomain) {
-                $query->andWhere([$accessDomain => [\Yii::$app->language, self::$_public]]);
+                $query->andWhere([$accessDomain => [\Yii::$app->language, self::$_all]]);
             }
         }
 
@@ -198,7 +198,7 @@ trait ActiveRecordAccessTrait
      */
     public static function allAccess()
     {
-        return [self::$_public => self::$_public];
+        return [self::$_all => self::$_all];
     }
 
     /**
