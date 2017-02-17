@@ -121,16 +121,13 @@ trait ActiveRecordAccessTrait
         parent::beforeDelete();
 
         $accessDelete = self::accessColumnAttributes()['delete'];
-        if (self::$activeAccessTrait && $accessDelete) {
-            if (!$this->hasPermission($accessDelete)) {
+        if (self::$activeAccessTrait) {
+            if ($accessDelete && !$this->hasPermission($accessDelete)) {
                 $this->addAccessError('delete');
                 return false;
-            } else {
-                return true;
             }
-        } else {
-            return true;
         }
+        return true;
     }
 
     /**
