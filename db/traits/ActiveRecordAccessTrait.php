@@ -89,66 +89,6 @@ trait ActiveRecordAccessTrait
     /**
      * @inheritdoc
      */
-    public function rules()
-    {
-        $accessOwner  = self::accessColumnAttributes()['owner'];
-        $accessRead   = self::accessColumnAttributes()['read'];
-        $accessUpdate = self::accessColumnAttributes()['update'];
-        $accessDelete = self::accessColumnAttributes()['delete'];
-        $accessDomain = self::accessColumnAttributes()['domain'];
-
-        // safe validator
-        $safe = [];
-
-        // string validator
-        $string = [];
-
-        // default validator
-        $default = [];
-
-        // integer validator
-        $integer = [];
-
-        // add used attributes to validation rules
-        if ($accessOwner) {
-            array_push($safe, $accessOwner);
-            array_push($integer, $accessOwner);
-        }
-        if ($accessRead) {
-            array_push($safe, $accessRead);
-            array_push($string, $accessRead);
-            array_push($default, $accessRead);
-        }
-        if ($accessUpdate) {
-            array_push($safe, $accessUpdate);
-            array_push($string, $accessUpdate);
-            array_push($default, $accessUpdate);
-        }
-        if ($accessDelete) {
-            array_push($safe, $accessDelete);
-            array_push($string, $accessDelete);
-            array_push($default, $accessDelete);
-        }
-        if ($accessDomain) {
-            array_push($safe, $accessDomain);
-            array_push($string, $accessDomain);
-            array_push($default, $accessDomain);
-        }
-
-        return ArrayHelper::merge(
-            parent::rules(),
-            [
-                [$safe, 'safe'],
-                [$string, 'string', 'max' => 255],
-                [$default, 'default', 'value' => null],
-                [$integer, 'integer']
-            ]
-        );
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function beforeSave($insert)
     {
         parent::beforeSave($insert);
