@@ -95,8 +95,8 @@ trait ActiveRecordAccessTrait
 
             // INSERT record: return true for new records
             $accessOwner = self::accessColumnAttributes()['owner'];
-            if ($insert && $accessOwner) {
-                if (!\Yii::$app->user->isGuest) {
+            if ($insert) {
+                if ($accessOwner && !\Yii::$app->user->isGuest) {
                     $this->$accessOwner = \Yii::$app->user->id;
                 }
                 return true;
