@@ -91,23 +91,27 @@ trait ActiveRecordAccessTrait
     {
         parent::beforeSave($insert);
 
-        // return true for new records
-        if ($insert) {
-            if (!\Yii::$app->user->isGuest) {
-                $this->access_owner = \Yii::$app->user->id;
-            }
-            return true;
-        }
-        $accessUpdate = self::accessColumnAttributes()['update'];
-        if (self::$activeAccessTrait && $accessUpdate) {
-            if (!$this->hasPermission($accessUpdate)) {
-                $this->addAccessError('update');
-                return false;
-            } else {
+        if (self::$activeAccessTrait) {
+
+            // INSERT record: return true for new records
+            $accessOwner = self::accessColumnAttributes()['owner'];
+            if ($insert && $accessOwner) {
+                if (!\Yii::$app->user->isGuest) {
+                    $this->access_owner = \Yii::$app->user->id;
+                }
                 return true;
             }
-        } else {
-            return true;
+
+            // UPDATE record
+            $accessUpdate = self::accessColumnAttributes()['update'];
+            if ($accessUpdate) {
+                if (!$this->hasPermission($accessUpdate)) {
+                    $this->addAccessError('update');
+                    return false;
+                } else {
+                    return true;
+                }
+            }
         }
     }
 
