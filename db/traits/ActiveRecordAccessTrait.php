@@ -9,8 +9,6 @@
 
 namespace dmstr\db\traits;
 
-use yii\helpers\ArrayHelper;
-
 /**
  * Trait ActiveRecordAccessTrait
  *
