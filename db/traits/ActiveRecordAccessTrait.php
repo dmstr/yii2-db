@@ -99,7 +99,6 @@ trait ActiveRecordAccessTrait
                 if ($accessOwner && !\Yii::$app->user->isGuest) {
                     $this->$accessOwner = \Yii::$app->user->id;
                 }
-                return true;
             }
 
             // UPDATE record
@@ -108,11 +107,10 @@ trait ActiveRecordAccessTrait
                 if (!$this->hasPermission($accessUpdate)) {
                     $this->addAccessError('update');
                     return false;
-                } else {
-                    return true;
                 }
             }
         }
+        return true;
     }
 
     /**
