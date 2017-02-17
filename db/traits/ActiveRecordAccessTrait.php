@@ -97,7 +97,7 @@ trait ActiveRecordAccessTrait
             $accessOwner = self::accessColumnAttributes()['owner'];
             if ($insert && $accessOwner) {
                 if (!\Yii::$app->user->isGuest) {
-                    $this->access_owner = \Yii::$app->user->id;
+                    $this->$accessOwner = \Yii::$app->user->id;
                 }
                 return true;
             }
