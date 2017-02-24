@@ -87,9 +87,9 @@ trait ActiveRecordAccessTrait
     /**
      * @inheritdoc
      */
-    public function beforeSave($insert)
+    public function beforeSave($insert, $changedAttributes)
     {
-        parent::beforeSave($insert);
+        parent::beforeSave($insert, $changedAttributes);
 
         if (self::$activeAccessTrait) {
 
