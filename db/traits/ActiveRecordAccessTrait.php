@@ -236,8 +236,11 @@ trait ActiveRecordAccessTrait
             return false;
         }
         // owner check
-        if (!\Yii::$app->user->isGuest && $this->access_owner === \Yii::$app->user->id) {
-            return true;
+        $accessOwner  = self::accessColumnAttributes()['owner'];
+        if ($accessOwner) {
+            if (!\Yii::$app->user->isGuest && $this->{$accessOwner} === \Yii::$app->user->id) {
+                return true;
+            }
         }
         // check assigned permissions
         if (!empty(array_intersect(array_keys(self::getUsersAuthItems()), explode(',', $this->{$action})))) {
