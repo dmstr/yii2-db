@@ -33,7 +33,7 @@ trait ActiveRecordAccessTrait
      * Public / all access
      * @var string
      */
-    private static $_all = '*';
+    public static $_all = '*';
 
     /**
      * @return array with access field names
