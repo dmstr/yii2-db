@@ -186,6 +186,7 @@ trait ActiveRecordAccessTrait
                 }
             }
             $items = array_merge($publicAuthItem, $authItems);
+            asort($items);
             return $items;
         }
         return $publicAuthItem;
