@@ -94,8 +94,8 @@ trait ActiveRecordAccessTrait
         if (self::$activeAccessTrait) {
 
             // INSERT record: return true for new records
-            $accessOwner = self::accessColumnAttributes()['owner'];
             if ($insert) {
+                $accessOwner = self::accessColumnAttributes()['owner'];
                 if ($accessOwner && !\Yii::$app->user->isGuest) {
                     $this->$accessOwner = \Yii::$app->user->id;
                 }
@@ -106,7 +106,7 @@ trait ActiveRecordAccessTrait
             $accessUpdate = self::accessColumnAttributes()['update'];
             if ($accessUpdate) {
                 if (!$this->hasPermission($accessUpdate)) {
-                    $this->addAccessError('update');
+                    $this->addAccessError('update', $accessUpdate);
                     return false;
                 }
             }
@@ -121,10 +121,10 @@ trait ActiveRecordAccessTrait
     {
         parent::beforeDelete();
 
-        $accessDelete = self::accessColumnAttributes()['delete'];
         if (self::$activeAccessTrait) {
+            $accessDelete = self::accessColumnAttributes()['delete'];
             if ($accessDelete && !$this->hasPermission($accessDelete)) {
-                $this->addAccessError('delete');
+                $this->addAccessError('delete', $accessDelete);
                 return false;
             }
         }
@@ -253,14 +253,16 @@ trait ActiveRecordAccessTrait
     }
 
     /**
-     * Set error flash for controller action id
+     * - Set error flash for controller action id
+     * - Add error message to access attribute
+     * - Write error log
      *
-     * @param string $action
-     *
-     * @return bool|false
+     * @param string $action update|delete
+     * @param string $attribute
      */
-    private function addAccessError($action)
+    private function addAccessError($action, $attribute)
     {
+        // the error message
         $msg = \Yii::t(
             'app',
             'You are not allowed to {0} record #{1}',
@@ -268,12 +270,9 @@ trait ActiveRecordAccessTrait
         );
 
         if (self::$enableFlashMessages) {
-            \Yii::$app->session->addFlash(
-                'danger',
-                $msg
-            );
-        } else {
-            \Yii::error($msg, __METHOD__);
+            \Yii::$app->session->addFlash('danger', $msg);
         }
+        $this->addError($attribute, $msg);
+        \Yii::error($msg, __METHOD__);
     }
 }
