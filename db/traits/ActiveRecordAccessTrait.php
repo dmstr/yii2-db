@@ -99,6 +99,7 @@ trait ActiveRecordAccessTrait
                 if ($accessOwner && !\Yii::$app->user->isGuest) {
                     $this->$accessOwner = \Yii::$app->user->id;
                 }
+                return true;
             }
 
             // UPDATE record
