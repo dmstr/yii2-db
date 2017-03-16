@@ -237,6 +237,10 @@ trait ActiveRecordAccessTrait
         if ($action === null && !in_array($action, self::accessColumnAttributes())) {
             return false;
         }
+        // always true for admins
+        if (!\Yii::$app->user->isGuest && \Yii::$app->user->identity->isAdmin) {
+            return true;
+        }
         // owner check
         $accessOwner  = self::accessColumnAttributes()['owner'];
         if ($accessOwner) {
@@ -248,7 +252,6 @@ trait ActiveRecordAccessTrait
         if (!empty(array_intersect(array_keys(self::getUsersAuthItems()), explode(',', $this->{$action})))) {
             return true;
         }
-
         return false;
     }
 
