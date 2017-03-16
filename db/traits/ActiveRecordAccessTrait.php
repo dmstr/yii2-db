@@ -273,7 +273,7 @@ trait ActiveRecordAccessTrait
         );
 
         if (self::$enableFlashMessages) {
-            \Yii::$app->session->addFlash('danger', $msg);
+            \Yii::$app->session->addFlash('error', $msg);
         }
         $this->addError($attribute, $msg);
         \Yii::info('User ID: #' . \Yii::$app->user->id . ' | ' . $msg, get_called_class());
