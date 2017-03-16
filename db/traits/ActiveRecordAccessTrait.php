@@ -183,7 +183,15 @@ trait ActiveRecordAccessTrait
                 // Users auth items
                 $authItems = [];
                 foreach (\Yii::$app->authManager->getAssignments(\Yii::$app->user->id) as $name => $item) {
-                    $authItems[$name] = $authManager->getItem($item->roleName)->description;
+
+                    $authItem = $authManager->getItem($item->roleName);
+
+                    if (!empty($authItem->description)) {
+                        $description = $authItem->description;
+                    } else {
+                        $description = $name;
+                    }
+                    $authItems[$name] = $description;
                 }
             }
             $items = array_merge($publicAuthItem, $authItems);
