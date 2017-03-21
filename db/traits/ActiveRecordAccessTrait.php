@@ -89,29 +89,29 @@ trait ActiveRecordAccessTrait
      */
     public function beforeSave($insert)
     {
-        parent::beforeSave($insert);
-
-        if (self::$activeAccessTrait) {
-
-            // INSERT record: return true for new records
-            if ($insert) {
-                $accessOwner = self::accessColumnAttributes()['owner'];
-                if ($accessOwner && !\Yii::$app->user->isGuest) {
-                    $this->$accessOwner = \Yii::$app->user->id;
-                }
-                return true;
-            }
-
-            // UPDATE record
-            $accessUpdate = self::accessColumnAttributes()['update'];
-            if ($accessUpdate) {
-                if (!$this->hasPermission($accessUpdate)) {
-                    $this->addAccessError('update', $accessUpdate);
-                    return false;
+        if (parent::beforeSave($insert)) {
+            if (self::$activeAccessTrait) {
+                if ($insert) {
+                    // INSERT record: return true for new records
+                    $accessOwner = self::accessColumnAttributes()['owner'];
+                    if ($accessOwner && !\Yii::$app->user->isGuest) {
+                        $this->$accessOwner = \Yii::$app->user->id;
+                    }
+                } else {
+                    // UPDATE record
+                    $accessUpdate = self::accessColumnAttributes()['update'];
+                    if ($accessUpdate) {
+                        if (!$this->hasPermission($accessUpdate)) {
+                            $this->addAccessError('update', $accessUpdate);
+                            return false;
+                        }
+                    }
                 }
             }
+            return true;
+        } else {
+            return false;
         }
-        return true;
     }
 
     /**
@@ -119,16 +119,18 @@ trait ActiveRecordAccessTrait
      */
     public function beforeDelete()
     {
-        parent::beforeDelete();
-
-        if (self::$activeAccessTrait) {
-            $accessDelete = self::accessColumnAttributes()['delete'];
-            if ($accessDelete && !$this->hasPermission($accessDelete)) {
-                $this->addAccessError('delete', $accessDelete);
-                return false;
+        if (parent::beforeDelete()) {
+            if (self::$activeAccessTrait) {
+                $accessDelete = self::accessColumnAttributes()['delete'];
+                if ($accessDelete && !$this->hasPermission($accessDelete)) {
+                    $this->addAccessError('delete', $accessDelete);
+                    return false;
+                }
             }
+            return true;
+        } else {
+            return false;
         }
-        return true;
     }
 
     /**
