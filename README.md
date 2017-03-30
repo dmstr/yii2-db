@@ -1,6 +1,11 @@
 Yii 2 Database Toolkit
 ======================
 
+[![Latest Stable Version](https://poser.pugx.org/dmstr/yii2-db/v/stable.svg)](https://packagist.org/packages/dmstr/yii2-db) 
+[![Total Downloads](https://poser.pugx.org/dmstr/yii2-db/downloads.svg)](https://packagist.org/packages/dmstr/yii2-db)
+[![License](https://poser.pugx.org/dmstr/yii2-db/license.svg)](https://packagist.org/packages/dmstr/yii2-db)
+
+
 Database extensions
 
 Installation
