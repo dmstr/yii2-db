@@ -155,7 +155,7 @@ trait ActiveRecordAccessTrait
             // auth manager
             $authManager = \Yii::$app->authManager;
 
-            if (\Yii::$app->user->identity->isAdmin) {
+            if (!empty(\Yii::$app->user->identity->isAdmin)) {
 
                 // All roles
                 foreach ($authManager->getRoles() as $name => $role) {
