@@ -238,6 +238,8 @@ class MysqlController extends Controller
         $command->addArg('-u',getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=',getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg('--no-create-info');
+        $command->addArg('--skip-extended-insert');
+
         $this->stdout("Ignoring tables: ");
         foreach ($this->noDataTables as $table) {
             $command->addArg('--ignore-table',getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
