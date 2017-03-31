@@ -76,7 +76,7 @@ trait ActiveRecordAccessTrait
                 if (Yii::$app->db->getDriverName() === 'mysql') {
                     $query->$queryType('FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0');
                 } else {
-                    $query->$queryType(" '" . $accessRead . "'= ANY (string_to_array('$authItems', ','))");
+                    $query->$queryType(" '" . $accessRead . "'= SOME (string_to_array('$authItems', ','))");
                 }
 
             }
