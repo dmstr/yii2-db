@@ -8,6 +8,7 @@
  */
 
 namespace dmstr\db\traits;
+use Yii;
 
 /**
  * Trait ActiveRecordAccessTrait
@@ -72,7 +73,12 @@ trait ActiveRecordAccessTrait
             if ($accessRead) {
                 $queryType = ($accessOwner) ? 'orWhere' : 'where';
                 $authItems = implode(',', array_keys(self::getUsersAuthItems()));
-                $query->$queryType('FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0');
+                if (Yii::$app->db->getDriverName() === 'mysql') {
+                    $query->$queryType('FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0');
+                } else {
+                    $query->$queryType(" '" . $accessRead . "'= ANY (string_to_array('$authItems', ','))");
+                }
+
             }
 
             // access domain check
