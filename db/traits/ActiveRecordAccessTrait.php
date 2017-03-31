@@ -73,12 +73,8 @@ trait ActiveRecordAccessTrait
             if ($accessRead) {
                 $queryType = ($accessOwner) ? 'orWhere' : 'where';
                 $authItems = implode(',', array_keys(self::getUsersAuthItems()));
-                if (Yii::$app->db->getDriverName() === 'mysql') {
-                    $query->$queryType('FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0');
-                } else {
-                    $query->$queryType(" '" . $accessRead . "'= SOME (string_to_array('$authItems', ','))");
-                }
-
+                $checkInSetQuery = self::getInSetQueryPart($accessRead, $authItems);
+                $query->$queryType($checkInSetQuery);
             }
 
             // access domain check
@@ -293,5 +289,19 @@ trait ActiveRecordAccessTrait
         }
         $this->addError($attribute, $msg);
         \Yii::info('User ID: #' . \Yii::$app->user->id . ' | ' . $msg, get_called_class());
+    }
+    
+    /**
+     * Return correct part of check in set  query for current DB
+     * @param $accessRead
+     * @param $authItems
+     * @return string
+     */
+    private static function getInSetQueryPart($accessRead, $authItems)
+    {
+        if (Yii::$app->db->getDriverName() === 'mysql') {
+            return 'FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0';
+        }
+        return " '" . $accessRead . "'= SOME (string_to_array('$authItems', ','))";
     }
 }
