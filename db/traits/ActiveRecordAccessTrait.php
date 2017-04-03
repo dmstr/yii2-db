@@ -9,6 +9,8 @@
 
 namespace dmstr\db\traits;
 use Yii;
+use dmstr\db\exceptions\UnsupportedDbException;
+
 
 /**
  * Trait ActiveRecordAccessTrait
@@ -299,9 +301,14 @@ trait ActiveRecordAccessTrait
      */
     private static function getInSetQueryPart($accessRead, $authItems)
     {
-        if (Yii::$app->db->getDriverName() === 'mysql') {
-            return 'FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0';
+        $dbName = Yii::$app->db->getDriverName();
+        switch($dbName) {
+            case 'mysql':
+                return 'FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0';
+            case 'pgsql':
+                return " '" . $accessRead . "'= SOME (string_to_array('$authItems', ','))";
+            default:
+                throw new UnsupportedDbException('This database is not being supported yet');
         }
-        return " '" . $accessRead . "'= SOME (string_to_array('$authItems', ','))";
     }
 }
