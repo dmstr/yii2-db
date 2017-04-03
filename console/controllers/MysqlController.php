@@ -119,7 +119,7 @@ class MysqlController extends Controller
 
         // check root user settings
         $root = $root ?: getenv("DB_ENV_MYSQL_ROOT_USER");
-        if ($root === null) {
+        if (empty($root)) {
             $this->stdout('No root user configured, aborting.');
             return;
         }
