@@ -8,6 +8,9 @@
  */
 
 namespace dmstr\db\traits;
+use Yii;
+use dmstr\db\exceptions\UnsupportedDbException;
+
 
 /**
  * Trait ActiveRecordAccessTrait
@@ -72,7 +75,8 @@ trait ActiveRecordAccessTrait
             if ($accessRead) {
                 $queryType = ($accessOwner) ? 'orWhere' : 'where';
                 $authItems = implode(',', array_keys(self::getUsersAuthItems()));
-                $query->$queryType('FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0');
+                $checkInSetQuery = self::getInSetQueryPart($accessRead, $authItems);
+                $query->$queryType($checkInSetQuery);
             }
 
             // access domain check
@@ -287,5 +291,24 @@ trait ActiveRecordAccessTrait
         }
         $this->addError($attribute, $msg);
         \Yii::info('User ID: #' . \Yii::$app->user->id . ' | ' . $msg, get_called_class());
+    }
+    
+    /**
+     * Return correct part of check in set  query for current DB
+     * @param $accessRead
+     * @param $authItems
+     * @return string
+     */
+    private static function getInSetQueryPart($accessRead, $authItems)
+    {
+        $dbName = Yii::$app->db->getDriverName();
+        switch($dbName) {
+            case 'mysql':
+                return 'FIND_IN_SET(' . $accessRead . ', "' . $authItems . '") > 0';
+            case 'pgsql':
+                return " '" . $accessRead . "'= SOME (string_to_array('$authItems', ','))";
+            default:
+                throw new UnsupportedDbException('This database is not being supported yet');
+        }
     }
 }
