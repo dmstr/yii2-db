@@ -162,6 +162,7 @@ trait ActiveRecordAccessTrait
             if (!empty(\Yii::$app->user->identity->isAdmin)) {
 
                 // All roles
+                $authRoles = [];
                 foreach ($authManager->getRoles() as $name => $role) {
 
                     if (!empty($role->description)) {
@@ -173,6 +174,7 @@ trait ActiveRecordAccessTrait
                 }
 
                 // All permissions
+                $authPermissions = [];
                 foreach ($authManager->getPermissions() as $name => $permission) {
 
                     if (!empty($permission->description)) {
