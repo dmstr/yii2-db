@@ -243,6 +243,11 @@ class MysqlController extends Controller
         $command->addArg('--no-autocommit');
         $command->addArg('--disable-keys');
 
+        # if ENV is set get mysql Port
+        if (getenv('DB_PORT_3306_TCP_PORT')) {
+            $command->addArg('-P',getenv('DB_PORT_3306_TCP_PORT'));
+        }
+
         $this->stdout("Ignoring tables: ");
         foreach ($this->noDataTables as $table) {
             $command->addArg('--ignore-table',getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
