@@ -56,6 +56,11 @@ class MysqlController extends Controller
     public $truncateTables = 0;
 
     /**
+     * @var string default path/alias for file output
+     */
+    public $outputPath = '@runtime/mysql';
+
+    /**
      * @inheritdoc
      */
     public function options($actionId)
@@ -64,8 +69,8 @@ class MysqlController extends Controller
             case $actionId == 'dump' || $actionId == 'x-dump-data':
                 $additionalOptions = ['noDataTables'];
                 break;
-            case $actionId == 'x-dump':
-                $additionalOptions = ['includeTables', 'excludeTables', 'dataOnly', 'truncateTables'];
+            case $actionId == 'x-dump' || 'export':
+                $additionalOptions = ['includeTables', 'excludeTables', 'dataOnly', 'truncateTables', 'outputPath'];
                 break;
             default:
                 $additionalOptions = [];
@@ -255,7 +260,7 @@ class MysqlController extends Controller
             \Yii::$app->end(1);
         }
 
-        $dir = \Yii::getAlias('@runtime/mysql');
+        $dir = \Yii::getAlias($this->outputPath);
         FileHelper::createDirectory($dir);
 
         $dump = $command->getOutput();
@@ -325,7 +330,7 @@ class MysqlController extends Controller
         $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; ' . $truncateTable, $dump);
 
         // generate file
-        $dir = \Yii::getAlias('@runtime/mysql');
+        $dir = \Yii::getAlias($this->outputPath);
         FileHelper::createDirectory($dir);
         $fileName = $this->getFilePrefix() . '_' . $fileNameSuffix . '.sql';
         $file     = $dir . '/' . $fileName;
