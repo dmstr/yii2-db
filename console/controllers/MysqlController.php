@@ -364,8 +364,12 @@ class MysqlController extends Controller
         }
     }
 
-    private function getFilePrefix(){
-        return 'm'.gmdate('ymd_His').'_'.\Yii::$app->id.(defined('APP_VERSION')?'_'.trim(APP_VERSION):'');
+    private function getFilePrefix()
+    {
+        $sanitizedVersion = defined('APP_VERSION') ?
+            '_'.Inflector::slug(Inflector::camel2words(trim(APP_VERSION, '_')), '_') :
+            '';
+        return 'm'.gmdate('ymd_His').'_'.\Yii::$app->id.$sanitizedVersion;
     }
 
 }
