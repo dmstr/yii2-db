@@ -154,7 +154,7 @@ trait ActiveRecordAccessTrait
         // Public auth item, default
         $publicAuthItem = self::allAccess();
 
-        if (!\Yii::$app->user->isGuest) {
+        if (\Yii::$app instanceof yii\web\Application && ! \Yii::$app->user->isGuest) {
 
             // auth manager
             $authManager = \Yii::$app->authManager;
@@ -190,7 +190,7 @@ trait ActiveRecordAccessTrait
             } else {
                 // Users auth items
                 $authItems = [];
-                foreach (\Yii::$app->authManager->getAssignments(\Yii::$app->user->id) as $name => $item) {
+                foreach ($authManager->getAssignments(\Yii::$app->user->id) as $name => $item) {
 
                     $authItem = $authManager->getItem($item->roleName);
 
