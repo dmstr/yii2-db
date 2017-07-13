@@ -8,6 +8,7 @@ use yii\console\Controller;
 use yii\console\Exception;
 use yii\helpers\Console;
 use yii\helpers\FileHelper;
+use yii\helpers\Inflector;
 
 /**
  * MySQL database maintenance command.
@@ -65,7 +66,7 @@ class MysqlController extends Controller
      */
     public function options($actionId)
     {
-        switch($actionId) {
+        switch ($actionId) {
             case $actionId == 'dump' || $actionId == 'x-dump-data':
                 $additionalOptions = ['noDataTables'];
                 break;
@@ -88,9 +89,9 @@ class MysqlController extends Controller
     public function actionIndex()
     {
         $this->stdout("MySQL maintenance command\n");
-        echo $cmd = 'mysqlshow -h ' . getenv('DB_PORT_3306_TCP_ADDR') .
-            ' -u ' . getenv('DB_ENV_MYSQL_USER') .
-            ' --password=' . getenv('DB_ENV_MYSQL_PASSWORD') . ' ' . getenv('DB_ENV_MYSQL_DATABASE');
+        echo $cmd = 'mysqlshow -h '.getenv('DB_PORT_3306_TCP_ADDR').
+            ' -u '.getenv('DB_ENV_MYSQL_USER').
+            ' --password='.getenv('DB_ENV_MYSQL_PASSWORD').' '.getenv('DB_ENV_MYSQL_DATABASE');
         $this->stdout($this->execute($cmd));
         $this->stdout("\n");
     }
@@ -111,8 +112,14 @@ class MysqlController extends Controller
      *
      * @throws \yii\base\ExitException
      */
-    public function actionCreate($db = null,  $dsn = null, $root = null, $rootPassword = null, $user = null, $pass = null)
-    {
+    public function actionCreate(
+        $db = null,
+        $dsn = null,
+        $root = null,
+        $rootPassword = null,
+        $user = null,
+        $pass = null
+    ) {
         // check dsn
         if ($db === null) {
             $db = getenv("DATABASE_DSN_DB");
@@ -159,7 +166,7 @@ class MysqlController extends Controller
                 }
             );
         } catch (FailingTooHardException $e) {
-            $this->stdout("\n\nError: Unable to connect to database '" . $e->getMessage() . "''");
+            $this->stdout("\n\nError: Unable to connect to database '".$e->getMessage()."''");
             \Yii::$app->end(1);
         }
         $this->stdout(' [OK]');
@@ -183,7 +190,7 @@ class MysqlController extends Controller
                 }
             );
         } catch (FailingTooHardException $e) {
-            $this->stdout("\n\nError: Unable to setup database '" . $e->getMessage() . "''");
+            $this->stdout("\n\nError: Unable to setup database '".$e->getMessage()."''");
             \Yii::$app->end(1);
         }
 
@@ -202,29 +209,29 @@ class MysqlController extends Controller
         $ignoreOpts = '';
         $noDataTables = '';
         foreach ($this->noDataTables as $table) {
-            $ignoreOpts .= ' --ignore-table=' . getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table;
-            $noDataTables .= ' ' . $table;
+            $ignoreOpts .= ' --ignore-table='.getenv('DB_ENV_MYSQL_DATABASE').'.'.$table;
+            $noDataTables .= ' '.$table;
         }
         $date = date('U');
 
         $dir = 'runtime/mysql';
-        $file = $dir.'/full-' . $date . '.sql';
+        $file = $dir.'/full-'.$date.'.sql';
 
         $cmd = 'mkdir -p '.$dir.';';
         $this->execute($cmd);
 
-        $cmd = 'mysqldump -h ' . getenv('DB_PORT_3306_TCP_ADDR') .
-            ' -u ' . getenv('DB_ENV_MYSQL_USER') .
-            ' --password=' . getenv('DB_ENV_MYSQL_PASSWORD') .
-            ' ' . $ignoreOpts . ' ' . getenv('DB_ENV_MYSQL_DATABASE') . ' > ' . $file . ';';
+        $cmd = 'mysqldump -h '.getenv('DB_PORT_3306_TCP_ADDR').
+            ' -u '.getenv('DB_ENV_MYSQL_USER').
+            ' --password='.getenv('DB_ENV_MYSQL_PASSWORD').
+            ' '.$ignoreOpts.' '.getenv('DB_ENV_MYSQL_DATABASE').' > '.$file.';';
         $this->execute($cmd);
 
-        $cmd = 'mysqldump -h ' . getenv('DB_PORT_3306_TCP_ADDR') .
-            ' -u ' . getenv('DB_ENV_MYSQL_USER') .
-            ' --password=' . getenv('DB_ENV_MYSQL_PASSWORD') .
-            ' --no-data ' . getenv(
+        $cmd = 'mysqldump -h '.getenv('DB_PORT_3306_TCP_ADDR').
+            ' -u '.getenv('DB_ENV_MYSQL_USER').
+            ' --password='.getenv('DB_ENV_MYSQL_PASSWORD').
+            ' --no-data '.getenv(
                 'DB_ENV_MYSQL_DATABASE'
-            ) . ' ' . $noDataTables . ' >> ' . $file . ';';
+            ).' '.$noDataTables.' >> '.$file.';';
         $this->execute($cmd);
 
         $this->stdout("Dump to file '$file' completed.\n");
@@ -235,13 +242,14 @@ class MysqlController extends Controller
      * @throws \yii\base\Exception
      * @since 0.8.0
      */
-    public function actionExport(){
+    public function actionExport()
+    {
         $fileName = $this->getFilePrefix()."_data.sql";
         $command = new Command('mysqldump');
 
-        $command->addArg('-h',getenv('DB_PORT_3306_TCP_ADDR'));
-        $command->addArg('-u',getenv('DB_ENV_MYSQL_USER'));
-        $command->addArg('--password=',getenv('DB_ENV_MYSQL_PASSWORD'));
+        $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
+        $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
+        $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg('--no-create-info');
         $command->addArg('--skip-extended-insert');
         $command->addArg('--quick');
@@ -250,12 +258,12 @@ class MysqlController extends Controller
 
         # if ENV is set get mysql Port
         if (getenv('DB_PORT_3306_TCP_PORT')) {
-            $command->addArg('-P',getenv('DB_PORT_3306_TCP_PORT'));
+            $command->addArg('-P', getenv('DB_PORT_3306_TCP_PORT'));
         }
 
         $this->stdout("Ignoring tables: ");
         foreach ($this->noDataTables as $table) {
-            $command->addArg('--ignore-table',getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
+            $command->addArg('--ignore-table', getenv('DB_ENV_MYSQL_DATABASE').'.'.$table);
             $this->stdout("$table, ");
         }
         $this->stdout("\n");
@@ -272,7 +280,7 @@ class MysqlController extends Controller
         FileHelper::createDirectory($dir);
 
         $dump = $command->getOutput();
-        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/','LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;',$dump);
+        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;', $dump);
         $file = $dir.'/'.$fileName;
 
         file_put_contents($file, $dump);
@@ -283,7 +291,8 @@ class MysqlController extends Controller
     /**
      * Deprecated - alias for export
      */
-    public function actionXDumpData(){
+    public function actionXDumpData()
+    {
         \Yii::warning('x-dump-data is deprecated, please use export', __METHOD__);
         return $this->actionExport();
     }
@@ -298,9 +307,9 @@ class MysqlController extends Controller
      */
     public function actionXDump()
     {
-        $command        = new Command('mysqldump');
+        $command = new Command('mysqldump');
         $fileNameSuffix = 'schema-data';
-        $truncateTable  = '';
+        $truncateTable = '';
 
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
         $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
@@ -323,7 +332,7 @@ class MysqlController extends Controller
         // if exclude tables
         if (!empty($this->excludeTables)) {
             foreach ($this->excludeTables as $table) {
-                $command->addArg('--ignore-table', getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
+                $command->addArg('--ignore-table', getenv('DB_ENV_MYSQL_DATABASE').'.'.$table);
             }
         }
 
@@ -335,13 +344,13 @@ class MysqlController extends Controller
         if ($this->truncateTables == 1) {
             $truncateTable = 'TRUNCATE TABLE $1;';
         }
-        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; ' . $truncateTable, $dump);
+        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; '.$truncateTable, $dump);
 
         // generate file
         $dir = \Yii::getAlias($this->outputPath);
         FileHelper::createDirectory($dir);
-        $fileName = $this->getFilePrefix() . '_' . $fileNameSuffix . '.sql';
-        $file     = $dir . '/' . $fileName;
+        $fileName = $this->getFilePrefix().'_'.$fileNameSuffix.'.sql';
+        $file = $dir.'/'.$fileName;
         file_put_contents($file, $dump);
 
         $this->stdout("\nMySQL dump successfully written to '$file'\n", Console::FG_GREEN);
