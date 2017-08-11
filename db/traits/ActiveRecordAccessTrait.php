@@ -66,14 +66,16 @@ trait ActiveRecordAccessTrait
 
         if (self::$activeAccessTrait) {
 
-            // access owner check
-            if ($accessOwner) {
+            // access owner check only if attribute exists and user is logged in
+            $accessOwnerCheck = false;
+            if ($accessOwner && !\Yii::$app->user->isGuest) {
+                $accessOwnerCheck = true;
                 $query->where([$accessOwner => \Yii::$app->user->id]);
             }
 
             // access read check
             if ($accessRead) {
-                $queryType = ($accessOwner) ? 'orWhere' : 'where';
+                $queryType = ($accessOwnerCheck) ? 'orWhere' : 'where';
                 $authItems = implode(',', array_keys(self::getUsersAuthItems()));
                 $checkInSetQuery = self::getInSetQueryPart($accessRead, $authItems);
                 $query->$queryType($checkInSetQuery);
