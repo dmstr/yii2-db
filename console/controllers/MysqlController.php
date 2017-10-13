@@ -125,19 +125,19 @@ class MysqlController extends Controller
             $db = getenv("DATABASE_DSN_DB");
         }
         if (empty($db)) {
-            $this->stdout('No database configured, aborting.');
+            $this->stderr('No database configured, aborting.');
             return;
         }
 
         // check root user settings
         $root = $root ?: getenv("DB_ENV_MYSQL_ROOT_USER");
         if (empty($root)) {
-            $this->stdout('No root user configured, aborting.');
+            $this->stderr('No root user configured, aborting.');
             return;
         }
         $rootPassword = $rootPassword ?: getenv("DB_ENV_MYSQL_ROOT_PASSWORD");
         if (empty($rootPassword)) {
-            $this->stdout('No root password configured, aborting.');
+            $this->stderr('No root password configured, aborting.');
             return;
         }
 
@@ -146,7 +146,7 @@ class MysqlController extends Controller
         $dsn = $dsn ?: getenv("DATABASE_DSN_BASE");
 
         if (empty($user) || empty($pass) || empty($dsn)) {
-            $this->stdout('Configuration failed, aborting.');
+            $this->stderr('Configuration failed, aborting.');
             return;
         }
 
@@ -166,7 +166,7 @@ class MysqlController extends Controller
                 }
             );
         } catch (FailingTooHardException $e) {
-            $this->stdout("\n\nError: Unable to connect to database '".$e->getMessage()."''");
+            $this->stderr("\n\nError: Unable to connect to database '".$e->getMessage()."''");
             \Yii::$app->end(1);
         }
         $this->stdout(' [OK]');
@@ -190,7 +190,7 @@ class MysqlController extends Controller
                 }
             );
         } catch (FailingTooHardException $e) {
-            $this->stdout("\n\nError: Unable to setup database '".$e->getMessage()."''");
+            $this->stderr("\n\nError: Unable to setup database '".$e->getMessage()."''");
             \Yii::$app->end(1);
         }
 
