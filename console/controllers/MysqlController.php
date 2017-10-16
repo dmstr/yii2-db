@@ -248,6 +248,7 @@ class MysqlController extends Controller
         $command = new Command('mysqldump');
 
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
+        $command->addArg('-P', getenv('DB_PORT_3306_TCP_PORT'));
         $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg('--no-create-info');
@@ -312,6 +313,7 @@ class MysqlController extends Controller
         $truncateTable = '';
 
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
+        $command->addArg('-P', getenv('DB_PORT_3306_TCP_PORT'));
         $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg(getenv('DB_ENV_MYSQL_DATABASE'));
