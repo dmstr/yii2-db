@@ -96,6 +96,44 @@ class MysqlController extends Controller
         $this->stdout("\n");
     }
 
+
+    public function actionWaitForConnection(
+        $dsn = null,
+        $user = null,
+        $password = null
+    ) {
+        $dsn = $dsn ?: getenv("DATABASE_DSN_BASE");
+        $user = $user ?: getenv("DB_ENV_MYSQL_ROOT_USER");
+        $password = $password ?: getenv("DB_ENV_MYSQL_ROOT_PASSWORD");
+
+        if (empty($user) || empty($password) || empty($dsn)) {
+            $this->stderr('Configuration failed, aborting.');
+            return;
+        }
+
+        // trying to connect to database with PDO (20 times, interval 1 second)
+        $this->stdout(
+            "Checking database connection on DSN '{$dsn}' with user '{$user}'"
+        );
+
+        try {
+            // retry an operation up to 20 times
+            $pdo = \igorw\retry(
+                $this->mysqlRetryMaxCount,
+                function () use ($dsn, $user, $password) {
+                    $this->stdout('.');
+                    sleep($this->mysqlRetryTimeout);
+                    return new \PDO($dsn, $user, $password);
+                }
+            );
+        } catch (FailingTooHardException $e) {
+            $this->stderr("\n\nError: Unable to connect to database '".$e->getMessage()."''");
+            \Yii::$app->end(1);
+        }
+        $this->stdout(' [OK]'.PHP_EOL);
+
+    }
+
     /**
      * Create MySQL database
      *
@@ -120,63 +158,42 @@ class MysqlController extends Controller
         $user = null,
         $pass = null
     ) {
+
+        $db = $db ?: getenv("DATABASE_DSN_DB");
+        $dsn = $dsn ?: getenv("DATABASE_DSN_BASE");
+        $root = $root ?: getenv("DB_ENV_MYSQL_ROOT_USER");
+        $rootPassword = $rootPassword ?: getenv("DB_ENV_MYSQL_ROOT_PASSWORD");
+        $user = $user ?: getenv("DB_ENV_MYSQL_USER");
+        $pass = $pass ?: getenv("DB_ENV_MYSQL_PASSWORD");
+
         // check dsn
-        if ($db === null) {
-            $db = getenv("DATABASE_DSN_DB");
-        }
         if (empty($db)) {
             $this->stderr('No database configured, aborting.');
             return;
         }
-
         // check root user settings
-        $root = $root ?: getenv("DB_ENV_MYSQL_ROOT_USER");
         if (empty($root)) {
             $this->stderr('No root user configured, aborting.');
             return;
         }
-        $rootPassword = $rootPassword ?: getenv("DB_ENV_MYSQL_ROOT_PASSWORD");
         if (empty($rootPassword)) {
             $this->stderr('No root password configured, aborting.');
             return;
         }
-
-        $user = $user ?: getenv("DB_ENV_MYSQL_USER");
-        $pass = $pass ?: getenv("DB_ENV_MYSQL_PASSWORD");
-        $dsn = $dsn ?: getenv("DATABASE_DSN_BASE");
-
         if (empty($user) || empty($pass) || empty($dsn)) {
             $this->stderr('Configuration failed, aborting.');
             return;
         }
 
-        // trying to connect to database with PDO (20 times, interval 1 second)
-        $this->stdout(
-            "Checking database connection on DSN '{$dsn}' with user '{$root}'"
-        );
-
-        try {
-            // retry an operation up to 20 times
-            $pdo = \igorw\retry(
-                $this->mysqlRetryMaxCount,
-                function () use ($dsn, $root, $rootPassword) {
-                    $this->stdout('.');
-                    sleep($this->mysqlRetryTimeout);
-                    return new \PDO($dsn, $root, $rootPassword);
-                }
-            );
-        } catch (FailingTooHardException $e) {
-            $this->stderr("\n\nError: Unable to connect to database '".$e->getMessage()."''");
-            \Yii::$app->end(1);
-        }
-        $this->stdout(' [OK]');
-
+        // wait for database connection (BC)
+        $this->actionWaitForConnection($dsn, $root, $rootPassword);
 
         // try to create a database for the user
         $this->stdout(
             "\nCreating database '{$db}' and granting permissions to user '{$user}' on DSN '{$dsn}' with user '{$root}'"
         );
         try {
+            $pdo = new \PDO($dsn, $root, $rootPassword);
             \igorw\retry(
                 $this->mysqlRetryMaxCount,
                 function () use ($dsn, $root, $rootPassword, $pdo, $user, $pass, $db) {
