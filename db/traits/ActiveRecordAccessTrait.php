@@ -43,12 +43,14 @@ trait ActiveRecordAccessTrait
      */
     public static function accessColumnAttributes()
     {
+        // use prefix to avoid ambigious column names
+        $prefix = self::getTableSchema()->name;
         return [
-            'owner'  => 'access_owner',
-            'read'   => 'access_read',
-            'update' => 'access_update',
-            'delete' => 'access_delete',
-            'domain' => 'access_domain',
+            'owner'  => "{$prefix}.access_owner",
+            'read'   => "{$prefix}.access_read",
+            'update' => "{$prefix}.access_update",
+            'delete' => "{$prefix}.access_delete",
+            'domain' => "{$prefix}.access_domain",
         ];
     }
 
@@ -101,7 +103,9 @@ trait ActiveRecordAccessTrait
                     // INSERT record: return true for new records
                     $accessOwner = self::accessColumnAttributes()['owner'];
                     if ($accessOwner && !\Yii::$app->user->isGuest) {
-                        $this->$accessOwner = \Yii::$app->user->id;
+                        // extract property from table name with schema
+                        $prop = substr($accessOwner, strrpos($accessOwner, '.') + 1);
+                        $this->$prop = \Yii::$app->user->id;
                     }
                 } else {
                     // UPDATE record
