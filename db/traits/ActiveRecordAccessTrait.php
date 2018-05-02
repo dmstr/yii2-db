@@ -104,8 +104,12 @@ trait ActiveRecordAccessTrait
                     $accessOwner = self::accessColumnAttributes()['owner'];
                     if ($accessOwner && !\Yii::$app->user->isGuest) {
                         // extract property from table name with schema
-                        $prop = substr($accessOwner, strrpos($accessOwner, '.') + 1);
-                        $this->$prop = \Yii::$app->user->id;
+                        if (strstr($accessOwner, '.')) {
+                            $prop = substr($accessOwner, strrpos($accessOwner, '.') + 1);
+                        } else {
+                            $prop = $accessOwner;
+                        }
+                        $this->{$prop} = \Yii::$app->user->id;
                     }
                 } else {
                     // UPDATE record
