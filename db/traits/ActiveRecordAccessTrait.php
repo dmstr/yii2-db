@@ -103,13 +103,7 @@ trait ActiveRecordAccessTrait
                     // INSERT record: return true for new records
                     $accessOwner = self::accessColumnAttributes()['owner'];
                     if ($accessOwner && !\Yii::$app->user->isGuest) {
-                        // extract property from table name with schema
-                        if (strstr($accessOwner, '.')) {
-                            $prop = substr($accessOwner, strrpos($accessOwner, '.') + 1);
-                        } else {
-                            $prop = $accessOwner;
-                        }
-                        $this->{$prop} = \Yii::$app->user->id;
+                        $this->{$this->getSchemaProperty($accessOwner)} = \Yii::$app->user->id;
                     }
                 } else {
                     // UPDATE record
@@ -242,7 +236,7 @@ trait ActiveRecordAccessTrait
         // owner check
         $accessOwner  = self::accessColumnAttributes()['owner'];
         if ($accessOwner) {
-            if (!\Yii::$app->user->isGuest && $this->{$accessOwner} === \Yii::$app->user->id) {
+            if (!\Yii::$app->user->isGuest && $this->{$this->getSchemaProperty($accessOwner)} === \Yii::$app->user->id) {
                 return true;
             }
         }
@@ -294,5 +288,17 @@ trait ActiveRecordAccessTrait
             default:
                 throw new UnsupportedDbException('This database is not being supported yet');
         }
+    }
+
+    // extract property from table name with schema
+    private function getSchemaProperty($schemaProperty){
+        // extract property from table name with schema
+        if (strstr($schemaProperty, '.')) {
+            $prop = substr($schemaProperty, strrpos($schemaProperty, '.') + 1);
+        } else {
+            $prop = $schemaProperty;
+        }
+        return $prop;
+
     }
 }
