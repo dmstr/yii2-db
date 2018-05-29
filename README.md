@@ -109,6 +109,54 @@ SUB-COMMANDS
 - db/index (default)  Displays tables in database
 ```
 
+
+##Model im-/export command
+
+A command to export models to either an json or xml file and import them back into the db
+
+Add controller to your application config via controller map
+
+```
+'controllerMap' => [
+    'model' => \dmstr\console\controllers\ModelController::class
+]
+```
+
+- model/export  Exports model by class name to a defined location as a file. Accepts either single namespace as first parameter or a comma seperated list
+
+```
+EXAMPLE USUAGE:
+
+Basic as JSON (default)
+>_ yii model/export namespace\\models\\Model --tablePrefix=app_
+
+Export as XML
+>_ yii model/export namespace\\models\\Model --tablePrefix=app_ --type=xml
+
+Export as XML with relations -> On default it does not export relations
+>_ yii model/export namespace\\models\\Model 1 --tablePrefix=app_ --type=xml
+
+Export multiple models at once
+>_ yii models/export namespace\\models\\Model,namespace\\models\\Model2,... --tablePrefix=app_
+```
+
+- model/import  Imports given file, convert data into models and saves data in db. Accepts either a single file path or a comma sepeated list
+
+```
+EXAMPLE USUAGE:
+
+Basic import
+>_ yii model/import /path/to/output/model.json
+
+Import by alias
+>_ yii model/import @path/to/output/model.json
+
+Import multiple files (you can even mix them)
+>_ yii model/import @path/to/output/model.json,/path/to/output/model.xml
+```
+
+
+
 Traits
 ---
 
