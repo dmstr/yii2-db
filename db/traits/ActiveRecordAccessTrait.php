@@ -43,12 +43,14 @@ trait ActiveRecordAccessTrait
      */
     public static function accessColumnAttributes()
     {
+        // use prefix to avoid ambigious column names
+        $prefix = self::getTableSchema()->name;
         return [
-            'owner'  => 'access_owner',
-            'read'   => 'access_read',
-            'update' => 'access_update',
-            'delete' => 'access_delete',
-            'domain' => 'access_domain',
+            'owner'  => "{$prefix}.access_owner",
+            'read'   => "{$prefix}.access_read",
+            'update' => "{$prefix}.access_update",
+            'delete' => "{$prefix}.access_delete",
+            'domain' => "{$prefix}.access_domain",
         ];
     }
 
@@ -101,7 +103,7 @@ trait ActiveRecordAccessTrait
                     // INSERT record: return true for new records
                     $accessOwner = self::accessColumnAttributes()['owner'];
                     if ($accessOwner && !\Yii::$app->user->isGuest) {
-                        $this->$accessOwner = \Yii::$app->user->id;
+                        $this->{$this->getSchemaProperty($accessOwner)} = \Yii::$app->user->id;
                     }
                 } else {
                     // UPDATE record
@@ -148,7 +150,7 @@ trait ActiveRecordAccessTrait
     }
 
     /**
-     * All assigned auth items for the logged in user or all available auth items for admin users
+     * get all auth items and check if user->can($item)
      * @return array with item names
      */
     public static function getUsersAuthItems()
@@ -156,58 +158,30 @@ trait ActiveRecordAccessTrait
         // Public auth item, default
         $publicAuthItem = self::allAccess();
 
-        if (\Yii::$app instanceof yii\web\Application && ! \Yii::$app->user->isGuest) {
+        \Yii::trace("Get and check UsersAuthItems", __METHOD__);
+
+        if (\Yii::$app instanceof yii\web\Application) {
 
             // auth manager
             $authManager = \Yii::$app->authManager;
 
-            if (!empty(\Yii::$app->user->identity->isAdmin)) {
+            $authItems = [];
 
-                // All roles
-                $authRoles = [];
-                foreach ($authManager->getRoles() as $name => $role) {
+            $authItemsAll = array_merge($authManager->getRoles(), $authManager->getPermissions());
 
-                    if (!empty($role->description)) {
-                        $description = $role->description;
-                    } else {
-                        $description = $name;
-                    }
-                    $authRoles[$name] = $description;
+            foreach ($authItemsAll as $name => $item) {
+
+                if (\Yii::$app->user->can($name)) {
+                    $authItems[$name] = $item->description ? : $name;
                 }
 
-                // All permissions
-                $authPermissions = [];
-                foreach ($authManager->getPermissions() as $name => $permission) {
-
-                    if (!empty($permission->description)) {
-                        $description = $permission->description;
-                    } else {
-                        $description = $name;
-                    }
-                    $authPermissions[$name] = $description;
-                }
-
-                // All auth items
-                $authItems = array_merge($authRoles, $authPermissions);
-            } else {
-                // Users auth items
-                $authItems = [];
-                foreach ($authManager->getAssignments(\Yii::$app->user->id) as $name => $item) {
-
-                    $authItem = $authManager->getItem($item->roleName);
-
-                    if (!empty($authItem->description)) {
-                        $description = $authItem->description;
-                    } else {
-                        $description = $name;
-                    }
-                    $authItems[$name] = $description;
-                }
             }
+
             $items = array_merge($publicAuthItem, $authItems);
             asort($items);
             return $items;
         }
+
         return $publicAuthItem;
     }
 
@@ -262,7 +236,7 @@ trait ActiveRecordAccessTrait
         // owner check
         $accessOwner  = self::accessColumnAttributes()['owner'];
         if ($accessOwner) {
-            if (!\Yii::$app->user->isGuest && $this->{$accessOwner} === \Yii::$app->user->id) {
+            if (!\Yii::$app->user->isGuest && $this->{$this->getSchemaProperty($accessOwner)} === \Yii::$app->user->id) {
                 return true;
             }
         }
@@ -314,5 +288,17 @@ trait ActiveRecordAccessTrait
             default:
                 throw new UnsupportedDbException('This database is not being supported yet');
         }
+    }
+
+    // extract property from table name with schema
+    private function getSchemaProperty($schemaProperty){
+        // extract property from table name with schema
+        if (strstr($schemaProperty, '.')) {
+            $prop = substr($schemaProperty, strrpos($schemaProperty, '.') + 1);
+        } else {
+            $prop = $schemaProperty;
+        }
+        return $prop;
+
     }
 }
