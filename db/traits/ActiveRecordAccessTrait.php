@@ -106,6 +106,13 @@ trait ActiveRecordAccessTrait
                         $this->{$this->getSchemaProperty($accessOwner)} = \Yii::$app->user->id;
                     }
                 } else {
+
+                    // skip check if model has no changes
+                    if (empty($this->getDirtyAttributes())) {
+                        Yii::trace('Model has no changes, skipping permission check', __METHOD__);
+                        return true;
+                    }
+
                     // UPDATE record
                     $accessUpdate = self::accessColumnAttributes()['update'];
                     if ($accessUpdate) {
@@ -155,6 +162,8 @@ trait ActiveRecordAccessTrait
      */
     public static function getUsersAuthItems()
     {
+        static $items;
+
         // Public auth item, default
         $publicAuthItem = self::allAccess();
 
@@ -162,23 +171,26 @@ trait ActiveRecordAccessTrait
 
         if (\Yii::$app instanceof yii\web\Application) {
 
-            // auth manager
-            $authManager = \Yii::$app->authManager;
+            if (!$items) {
 
-            $authItems = [];
+                // auth manager
+                $authManager = \Yii::$app->authManager;
 
-            $authItemsAll = array_merge($authManager->getRoles(), $authManager->getPermissions());
+                $authItems = [];
 
-            foreach ($authItemsAll as $name => $item) {
+                $authItemsAll = array_merge($authManager->getRoles());
 
-                if (\Yii::$app->user->can($name)) {
-                    $authItems[$name] = $item->description ? : $name;
+                foreach ($authItemsAll as $name => $item) {
+
+                    if (\Yii::$app->user->can($name)) {
+                        $authItems[$name] = $name . ' (' . $item->description . ')';
+                    }
                 }
 
+                $items = array_merge($publicAuthItem, $authItems);
+                asort($items);
             }
 
-            $items = array_merge($publicAuthItem, $authItems);
-            asort($items);
             return $items;
         }
 
@@ -224,27 +236,34 @@ trait ActiveRecordAccessTrait
      *
      * @return bool
      */
-    public function hasPermission($action = null)
+    public function hasPermission($action)
     {
-        if ($action === null && !in_array($action, self::accessColumnAttributes())) {
+        // return false, if action is not valid
+        if (!in_array($action, self::accessColumnAttributes())) {
             return false;
         }
+
         // always true for admins
         if (!\Yii::$app->user->isGuest && \Yii::$app->user->identity->isAdmin) {
             return true;
         }
-        // owner check
+
+        // owner check (has all permissions)
         $accessOwner  = self::accessColumnAttributes()['owner'];
         if ($accessOwner) {
-            if (!\Yii::$app->user->isGuest && $this->{$this->getSchemaProperty($accessOwner)} === \Yii::$app->user->id) {
+            if (!\Yii::$app->user->isGuest && $this->getOldAttribute($this->getSchemaProperty($accessOwner)) == \Yii::$app->user->id) {
                 return true;
             }
         }
-        // check assigned permissions
-        if (!empty(array_intersect(array_keys(self::getUsersAuthItems()), explode(',', $this->{$this->getSchemaProperty($action)})))) {
+
+        // allow, if permission is "*"
+        $column =  $this->getSchemaProperty($action);
+        if ($this->getOldAttribute($column) === self::$_all) {
             return true;
         }
-        return false;
+
+        // check assigned permissions
+        return Yii::$app->user->can($this->getOldAttribute($column));
     }
 
     /**
