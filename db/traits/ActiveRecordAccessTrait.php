@@ -177,7 +177,7 @@ trait ActiveRecordAccessTrait
     }
 
     /**
-     * get all auth items and check if user->can($item)
+     * Returns roles *assigned* to current user or all roles for admin
      * @return array with item names
      */
     public static function getUsersAuthItems()
@@ -196,16 +196,16 @@ trait ActiveRecordAccessTrait
 
                 // auth manager
                 $authManager = \Yii::$app->authManager;
-
                 $authItems = [];
 
-                $authItemsAll = array_merge($authManager->getRoles());
+                if (Yii::$app->user->identity->isAdmin) {
+                    $roles = $authManager->getRoles();
+                } else {
+                    $roles = $authManager->getRolesByUser(Yii::$app->user->id);
+                }
 
-                foreach ($authItemsAll as $name => $item) {
-
-                    if (\Yii::$app->user->can($name)) {
-                        $authItems[$name] = $name . ' (' . $item->description . ')';
-                    }
+                foreach ($roles as $name => $item) {
+                    $authItems[$name] = $name . ' (' . $item->description . ')';
                 }
 
                 $items = array_merge($publicAuthItem, $authItems);
