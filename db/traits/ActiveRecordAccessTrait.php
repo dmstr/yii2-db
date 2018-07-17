@@ -198,7 +198,7 @@ trait ActiveRecordAccessTrait
                 $authManager = \Yii::$app->authManager;
                 $authItems = [];
 
-                if (Yii::$app->user->identity->isAdmin) {
+                if (Yii::$app->user->can('Admin')) {
                     $roles = $authManager->getRoles();
                 } else {
                     $roles = $authManager->getRolesByUser(Yii::$app->user->id);
@@ -265,7 +265,7 @@ trait ActiveRecordAccessTrait
         }
 
         // always true for admins
-        if (!\Yii::$app->user->isGuest && \Yii::$app->user->identity->isAdmin) {
+        if (\Yii::$app->can('Admin')) {
             return true;
         }
 
