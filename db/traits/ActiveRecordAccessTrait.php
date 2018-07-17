@@ -265,7 +265,7 @@ trait ActiveRecordAccessTrait
         }
 
         // always true for admins
-        if (\Yii::$app->can('Admin')) {
+        if (\Yii::$app->user->can('Admin')) {
             return true;
         }
 
