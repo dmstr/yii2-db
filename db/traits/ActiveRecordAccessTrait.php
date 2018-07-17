@@ -63,8 +63,8 @@ trait ActiveRecordAccessTrait
         /** @var $query \yii\db\ActiveQuery */
         $query = parent::find();
 
-        // disabled access behavior in console applications
-        if (Yii::$app instanceof ConsoleApplication) {
+        // disabled access behavior in console applications and for role 'Admin'
+        if (Yii::$app instanceof ConsoleApplication || Yii::$app->user->can('Admin')) {
             return $query;
         }
 
