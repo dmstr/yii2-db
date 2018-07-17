@@ -10,6 +10,7 @@
 namespace dmstr\db\traits;
 use Yii;
 use dmstr\db\exceptions\UnsupportedDbException;
+use yii\console\Application as ConsoleApplication;
 
 
 /**
@@ -62,6 +63,11 @@ trait ActiveRecordAccessTrait
         /** @var $query \yii\db\ActiveQuery */
         $query = parent::find();
 
+        // disabled access behavior in console applications
+        if (Yii::$app instanceof ConsoleApplication) {
+            return $query;
+        }
+
         $accessOwner  = self::accessColumnAttributes()['owner'];
         $accessRead   = self::accessColumnAttributes()['read'];
         $accessDomain = self::accessColumnAttributes()['domain'];
@@ -98,6 +104,12 @@ trait ActiveRecordAccessTrait
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
+
+            // disabled access behavior in console applications
+            if (Yii::$app instanceof ConsoleApplication) {
+                return true;
+            }
+
             if (self::$activeAccessTrait) {
                 if ($insert) {
                     // INSERT record: return true for new records
@@ -123,6 +135,7 @@ trait ActiveRecordAccessTrait
                     }
                 }
             }
+
             return true;
         } else {
             return false;
@@ -135,6 +148,12 @@ trait ActiveRecordAccessTrait
     public function beforeDelete()
     {
         if (parent::beforeDelete()) {
+
+            // disabled access behavior in console applications
+            if (Yii::$app instanceof ConsoleApplication) {
+                return true;
+            }
+
             if (self::$activeAccessTrait) {
                 $accessDelete = self::accessColumnAttributes()['delete'];
                 if ($accessDelete && !$this->hasPermission($accessDelete)) {
@@ -142,6 +161,7 @@ trait ActiveRecordAccessTrait
                     return false;
                 }
             }
+
             return true;
         } else {
             return false;
@@ -167,11 +187,12 @@ trait ActiveRecordAccessTrait
         // Public auth item, default
         $publicAuthItem = self::allAccess();
 
-        \Yii::trace("Get and check UsersAuthItems", __METHOD__);
 
         if (\Yii::$app instanceof yii\web\Application) {
 
             if (!$items) {
+
+                \Yii::trace("Get and check UsersAuthItems", __METHOD__);
 
                 // auth manager
                 $authManager = \Yii::$app->authManager;
