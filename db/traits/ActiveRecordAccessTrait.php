@@ -260,9 +260,10 @@ trait ActiveRecordAccessTrait
     public function hasPermission($action)
     {
         // return false, if action is not valid
-        if (!in_array($action, self::accessColumnAttributes())) {
-            return false;
-        }
+        # TODO: Improve $action param (don't use/check prefix)
+        #if (!in_array($action, self::accessColumnAttributes())) {
+        #    return false;
+        #}
 
         // always true for admins
         if (\Yii::$app->user->can('Admin')) {
