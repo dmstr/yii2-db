@@ -63,7 +63,7 @@ class AccessInput extends Widget
      */
     public function optsAccessDomain()
     {
-        if (Yii::$app->user->can('admin')) {
+        if (Yii::$app->user->can('Admin')) {
             $availableLanguages['*'] = '*';
             foreach (\Yii::$app->urlManager->languages as $availablelanguage) {
                 $availableLanguages[mb_strtolower($availablelanguage)] = mb_strtolower($availablelanguage);
