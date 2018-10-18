@@ -8,9 +8,11 @@
  */
 
 namespace dmstr\db\traits;
+
 use Yii;
 use dmstr\db\exceptions\UnsupportedDbException;
 use yii\console\Application as ConsoleApplication;
+use yii\helpers\StringHelper;
 
 
 /**
@@ -217,6 +219,32 @@ trait ActiveRecordAccessTrait
 
         return $publicAuthItem;
     }
+
+    /**
+     * @return null,string default access permission for user
+     */
+    public static function getDefaultAccessUpdateDelete() {
+
+        // allow setting `null` for eg. Admins
+        if (Yii::$app->user->can('accessUpdateDelete:null')) {
+            return null;
+        }
+
+        // return first found permission
+        $AuthManager = \Yii::$app->authManager;
+        $permissions = $AuthManager->getPermissions();
+        foreach ($permissions as $name => $Permission) {
+            if (StringHelper::startsWith($name, 'accessUpdateDelete:')) {
+                $data = explode(':', $name);
+                if (empty($data[1])) {
+                    Yii::warning("Invalid access permission '$name'", __METHOD__);
+                    continue;
+                }
+                return $data[1];
+            }
+        }
+    }
+
 
     /**
      * Decode access column by action from csv to array
