@@ -232,7 +232,7 @@ trait ActiveRecordAccessTrait
 
         // return first found permission
         $AuthManager = \Yii::$app->authManager;
-        $permissions = $AuthManager->getPermissions();
+        $permissions = $AuthManager->getPermissionsByUser(Yii::$app->user->id);
         foreach ($permissions as $name => $Permission) {
             if (StringHelper::startsWith($name, 'accessUpdateDelete:')) {
                 $data = explode(':', $name);
