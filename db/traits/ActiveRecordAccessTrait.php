@@ -220,13 +220,33 @@ trait ActiveRecordAccessTrait
         return $publicAuthItem;
     }
 
+
+    public static function getDefaultAccessDomain() {
+        // return first found permission
+        $AuthManager = \Yii::$app->authManager;
+        $permissions = $AuthManager->getPermissionsByUser(Yii::$app->user->id);
+        foreach ($permissions as $name => $Permission) {
+            if (StringHelper::startsWith($name, 'access.defaults.domain:')) {
+                $data = explode(':', $name);
+                if (empty($data[1])) {
+                    Yii::warning("Invalid domain access permission '$name'", __METHOD__);
+                    continue;
+                }
+
+                // map global to '*' since it is not allowed as a permission name (usuario)
+                return ($data[1] == 'global') ? self::$_all : $data[1];
+            }
+        }
+        return Yii::$app->language;
+    }
+
     /**
      * @return null,string default access permission for user
      */
     public static function getDefaultAccessUpdateDelete() {
 
         // allow setting `null` for eg. Admins
-        if (Yii::$app->user->can('accessUpdateDelete:null')) {
+        if (Yii::$app->user->can('access.defaults.updateDelete:null')) {
             return null;
         }
 
@@ -234,10 +254,10 @@ trait ActiveRecordAccessTrait
         $AuthManager = \Yii::$app->authManager;
         $permissions = $AuthManager->getPermissionsByUser(Yii::$app->user->id);
         foreach ($permissions as $name => $Permission) {
-            if (StringHelper::startsWith($name, 'accessUpdateDelete:')) {
+            if (StringHelper::startsWith($name, 'access.defaults.updateDelete:')) {
                 $data = explode(':', $name);
                 if (empty($data[1])) {
-                    Yii::warning("Invalid access permission '$name'", __METHOD__);
+                    Yii::warning("Invalid update/delete access permission '$name'", __METHOD__);
                     continue;
                 }
                 return $data[1];

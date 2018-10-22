@@ -9,6 +9,8 @@
 namespace dmstr\widgets;
 
 
+use dmstr\db\traits\ActiveRecordAccessTrait;
+use dmstr\modules\redirect\models\ActiveRecord;
 use kartik\select2\Select2;
 use yii\base\Widget;
 use yii\widgets\InputWidget;
@@ -63,8 +65,8 @@ class AccessInput extends Widget
      */
     public function optsAccessDomain()
     {
-        if (Yii::$app->user->can('accessDomain:any')) {
-            $availableLanguages['*'] = '*';
+        if (Yii::$app->user->can('access.availableDomains:any')) {
+            $availableLanguages[ActiveRecordAccessTrait::$_all] = 'GLOBAL';
             foreach (\Yii::$app->urlManager->languages as $availablelanguage) {
                 $availableLanguages[mb_strtolower($availablelanguage)] = mb_strtolower($availablelanguage);
             }

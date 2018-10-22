@@ -136,7 +136,16 @@ This migrations adds the available access check columns to your database table(s
 
 - *(update your cruds)*
 
+### RBAC permissions
 
+Permissions for selections
+
+- `access.availableDomains:any`
+
+Permissions to set default values
+
+- `access.defaults.accessDomain:global`
+- `access.defaults.updateDelete:<LANG>`
 
 **Option 2:**
 
