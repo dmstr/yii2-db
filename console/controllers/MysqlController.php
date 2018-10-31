@@ -95,9 +95,15 @@ class MysqlController extends Controller
      */
     public function actionIndex()
     {
+        # if ENV is set get mysql Port, default 3306
+        $port = 3306;
+        if (getenv('DB_PORT_3306_TCP_PORT')) {
+            $port = getenv('DB_PORT_3306_TCP_PORT');
+        }
+
         $this->stdout("MySQL maintenance command\n");
         echo $cmd = 'mysqlshow -h ' . getenv('DB_PORT_3306_TCP_ADDR') .
-            ' -u ' . getenv('DB_ENV_MYSQL_USER') .
+            ' -u ' . getenv('DB_ENV_MYSQL_USER') . ' -P ' . $port .
             ' --password=' . getenv('DB_ENV_MYSQL_PASSWORD') . ' ' . getenv('DB_ENV_MYSQL_DATABASE');
         $this->stdout($this->execute($cmd));
         $this->stdout("\n");
