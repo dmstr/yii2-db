@@ -8,8 +8,11 @@
  */
 
 namespace dmstr\db\traits;
+
 use Yii;
 use dmstr\db\exceptions\UnsupportedDbException;
+use yii\console\Application as ConsoleApplication;
+use yii\helpers\StringHelper;
 
 
 /**
@@ -62,6 +65,11 @@ trait ActiveRecordAccessTrait
         /** @var $query \yii\db\ActiveQuery */
         $query = parent::find();
 
+        // disabled access behavior in console applications and for role 'Admin'
+        if (Yii::$app instanceof ConsoleApplication || Yii::$app->user->can('Admin')) {
+            return $query;
+        }
+
         $accessOwner  = self::accessColumnAttributes()['owner'];
         $accessRead   = self::accessColumnAttributes()['read'];
         $accessDomain = self::accessColumnAttributes()['domain'];
@@ -98,6 +106,12 @@ trait ActiveRecordAccessTrait
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
+
+            // disabled access behavior in console applications
+            if (Yii::$app instanceof ConsoleApplication) {
+                return true;
+            }
+
             if (self::$activeAccessTrait) {
                 if ($insert) {
                     // INSERT record: return true for new records
@@ -106,6 +120,13 @@ trait ActiveRecordAccessTrait
                         $this->{$this->getSchemaProperty($accessOwner)} = \Yii::$app->user->id;
                     }
                 } else {
+
+                    // skip check if model has no changes
+                    if (empty($this->getDirtyAttributes())) {
+                        Yii::trace('Model has no changes, skipping permission check', __METHOD__);
+                        return true;
+                    }
+
                     // UPDATE record
                     $accessUpdate = self::accessColumnAttributes()['update'];
                     if ($accessUpdate) {
@@ -116,6 +137,7 @@ trait ActiveRecordAccessTrait
                     }
                 }
             }
+
             return true;
         } else {
             return false;
@@ -128,6 +150,12 @@ trait ActiveRecordAccessTrait
     public function beforeDelete()
     {
         if (parent::beforeDelete()) {
+
+            // disabled access behavior in console applications
+            if (Yii::$app instanceof ConsoleApplication) {
+                return true;
+            }
+
             if (self::$activeAccessTrait) {
                 $accessDelete = self::accessColumnAttributes()['delete'];
                 if ($accessDelete && !$this->hasPermission($accessDelete)) {
@@ -135,6 +163,7 @@ trait ActiveRecordAccessTrait
                     return false;
                 }
             }
+
             return true;
         } else {
             return false;
@@ -150,40 +179,92 @@ trait ActiveRecordAccessTrait
     }
 
     /**
-     * get all auth items and check if user->can($item)
+     * Returns roles *assigned* to current user or all roles for admin
      * @return array with item names
      */
     public static function getUsersAuthItems()
     {
+        static $items;
+
         // Public auth item, default
         $publicAuthItem = self::allAccess();
 
-        \Yii::trace("Get and check UsersAuthItems", __METHOD__);
 
         if (\Yii::$app instanceof yii\web\Application) {
 
-            // auth manager
-            $authManager = \Yii::$app->authManager;
+            if (!$items) {
 
-            $authItems = [];
+                \Yii::trace("Get and check UsersAuthItems", __METHOD__);
 
-            $authItemsAll = array_merge($authManager->getRoles(), $authManager->getPermissions());
+                // auth manager
+                $authManager = \Yii::$app->authManager;
+                $authItems = [];
 
-            foreach ($authItemsAll as $name => $item) {
-
-                if (\Yii::$app->user->can($name)) {
-                    $authItems[$name] = $item->description ? : $name;
+                if (Yii::$app->user->can('Admin')) {
+                    $roles = $authManager->getRoles();
+                } else {
+                    $roles = $authManager->getRolesByUser(Yii::$app->user->id);
                 }
 
+                foreach ($roles as $name => $item) {
+                    $authItems[$name] = $name . ' (' . $item->description . ')';
+                }
+
+                $items = array_merge($publicAuthItem, $authItems);
+                asort($items);
             }
 
-            $items = array_merge($publicAuthItem, $authItems);
-            asort($items);
             return $items;
         }
 
         return $publicAuthItem;
     }
+
+
+    public static function getDefaultAccessDomain() {
+        // return first found permission
+        $AuthManager = \Yii::$app->authManager;
+        $permissions = $AuthManager->getPermissionsByUser(Yii::$app->user->id);
+        foreach ($permissions as $name => $Permission) {
+            if (StringHelper::startsWith($name, 'access.defaults.domain:')) {
+                $data = explode(':', $name);
+                if (empty($data[1])) {
+                    Yii::warning("Invalid domain access permission '$name'", __METHOD__);
+                    continue;
+                }
+
+                // map global to '*' since it is not allowed as a permission name (usuario)
+                return ($data[1] == 'global') ? self::$_all : $data[1];
+            }
+        }
+        return Yii::$app->language;
+    }
+
+    /**
+     * @return null,string default access permission for user
+     */
+    public static function getDefaultAccessUpdateDelete() {
+
+        // allow setting `null` for eg. Admins
+        if (Yii::$app->user->can('access.defaults.updateDelete:null')) {
+            return null;
+        }
+
+        // return first found permission
+        $AuthManager = \Yii::$app->authManager;
+        $permissions = $AuthManager->getPermissionsByUser(Yii::$app->user->id);
+        foreach ($permissions as $name => $Permission) {
+            if (StringHelper::startsWith($name, 'access.defaults.updateDelete:')) {
+                $data = explode(':', $name);
+                if (empty($data[1])) {
+                    Yii::warning("Invalid update/delete access permission '$name'", __METHOD__);
+                    continue;
+                }
+                return $data[1];
+            }
+        }
+    }
+
 
     /**
      * Decode access column by action from csv to array
@@ -224,27 +305,35 @@ trait ActiveRecordAccessTrait
      *
      * @return bool
      */
-    public function hasPermission($action = null)
+    public function hasPermission($action)
     {
-        if ($action === null && !in_array($action, self::accessColumnAttributes())) {
-            return false;
-        }
+        // return false, if action is not valid
+        # TODO: Improve $action param (don't use/check prefix)
+        #if (!in_array($action, self::accessColumnAttributes())) {
+        #    return false;
+        #}
+
         // always true for admins
-        if (!\Yii::$app->user->isGuest && \Yii::$app->user->identity->isAdmin) {
+        if (\Yii::$app->user->can('Admin')) {
             return true;
         }
-        // owner check
+
+        // owner check (has all permissions)
         $accessOwner  = self::accessColumnAttributes()['owner'];
         if ($accessOwner) {
-            if (!\Yii::$app->user->isGuest && $this->{$this->getSchemaProperty($accessOwner)} === \Yii::$app->user->id) {
+            if (!\Yii::$app->user->isGuest && $this->getOldAttribute($this->getSchemaProperty($accessOwner)) == \Yii::$app->user->id) {
                 return true;
             }
         }
-        // check assigned permissions
-        if (!empty(array_intersect(array_keys(self::getUsersAuthItems()), explode(',', $this->{$this->getSchemaProperty($action)})))) {
+
+        // allow, if permission is "*"
+        $column =  $this->getSchemaProperty($action);
+        if ($this->getOldAttribute($column) === self::$_all) {
             return true;
         }
-        return false;
+
+        // check assigned permissions
+        return Yii::$app->user->can($this->getOldAttribute($column));
     }
 
     /**
