@@ -331,65 +331,18 @@ class MysqlController extends Controller
         $this->stdout("Dump to file '$file' completed.\n");
     }
 
-    /**
-     * EXPERIMENTAL: Schema and/or Data dumps
-     *
-     * @option: --includeTables
-     * @option: --excludeTables
-     * @option: --dataOnly [0|1]
-     * @option: --truncateTables [0|1]
-     */
-    public function actionXDump()
-    {
-        $command = new Command('mysqldump');
-        $fileNameSuffix = 'schema-data';
-        $truncateTable = '';
-
+    public function actionImport($file) {
+        $command = new Command('mysql');
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
         $command->addArg('-P', getenv('DB_PORT_3306_TCP_PORT'));
         $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
-        $command->addArg(getenv('DB_ENV_MYSQL_DATABASE'));
+        $command->addArg('-D', getenv('DB_ENV_MYSQL_DATABASE'));
+        $command->addArg('< '.$file);
 
-        // if only data
-        if ($this->dataOnly == 1) {
-            $fileNameSuffix = 'data';
-            $command->addArg('--no-create-info');
-        }
+        echo $command->getExecCommand();
 
-        // if include tables
-        if (!empty($this->includeTables)) {
-            foreach ($this->includeTables as $table) {
-                $command->addArg($table);
-            }
-        }
-
-        // if exclude tables
-        if (!empty($this->excludeTables)) {
-            foreach ($this->excludeTables as $table) {
-                $command->addArg('--ignore-table', getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
-            }
-        }
-
-        $this->stdout($command->getExecCommand());
         $command->execute();
-
-        $dump = $command->getOutput();
-
-        // if truncate tables
-        if ($this->truncateTables == 1) {
-            $truncateTable = 'TRUNCATE TABLE $1;';
-        }
-        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; ' . $truncateTable, $dump);
-
-        // generate file
-        $dir = \Yii::getAlias($this->outputPath);
-        FileHelper::createDirectory($dir);
-        $fileName = $this->getFilePrefix() . '_' . $fileNameSuffix . '.sql';
-        $file = $dir . '/' . $fileName;
-        file_put_contents($file, $dump);
-
-        $this->stdout("\nMySQL dump successfully written to '$file'\n", Console::FG_GREEN);
     }
 
     /**
