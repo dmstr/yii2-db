@@ -145,7 +145,7 @@ Permissions for selections
 Permissions to set default values
 
 - `access.defaults.accessDomain:global`
-- `access.defaults.updateDelete:<LANG>`
+- `access.defaults.updateDelete:<ROLE>`
 
 **Option 2:**
 
