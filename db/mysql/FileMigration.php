@@ -22,7 +22,7 @@ use yii\db\Migration;
 class FileMigration extends Migration
 {
 
-    public $file = null;
+    public $file;
     public $mysqlExecutable = 'mysql';
 
     public function init()
@@ -42,6 +42,9 @@ class FileMigration extends Migration
         }
     }
 
+    /**
+     * @return bool
+     */
     public function up()
     {
         preg_match('/host=([^;]*)/', $this->db->dsn, $hostMatches);
@@ -49,11 +52,7 @@ class FileMigration extends Migration
         preg_match('/dbname=([^;]*)/', $this->db->dsn, $databaseMatches);
         $databaseName = $databaseMatches[1];
         preg_match('/port=([^;]*)/', $this->db->dsn, $portMatches);
-        if (isset($portMatches[1])) {
-            $port = $portMatches[1];
-        } else {
-            $port = "3306";
-        }
+        $port = $portMatches[1] ?? '3306';
 
         $command = new Command($this->mysqlExecutable);
         $command->addArg('-h', $hostName);
@@ -65,14 +64,12 @@ class FileMigration extends Migration
         #echo "    ".$cmd . "\n"; // TODO echo only with --verbose
         exec($cmd, $output, $return);
 
-        if ($return !== 0) {
-            //var_dump($output, $return);
-            return false;
-        } else {
-            return true;
-        }
+        return !$return === 0;
     }
 
+    /**
+     * @return bool
+     */
     public function down()
     {
         echo $this::className() . " cannot be reverted.\n";

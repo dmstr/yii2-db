@@ -43,6 +43,7 @@ trait ActiveRecordAccessTrait
 
     /**
      * @return array with access field names
+     * @throws \yii\base\InvalidConfigException
      */
     public static function accessColumnAttributes()
     {
@@ -85,7 +86,7 @@ trait ActiveRecordAccessTrait
 
             // access read check
             if ($accessRead) {
-                $queryType = ($accessOwnerCheck) ? 'orWhere' : 'where';
+                $queryType = $accessOwnerCheck ? 'orWhere' : 'where';
                 $authItems = implode(',', array_keys(self::getUsersAuthItems()));
                 $checkInSetQuery = self::getInSetQueryPart($accessRead, $authItems);
                 $query->$queryType($checkInSetQuery);
@@ -123,7 +124,7 @@ trait ActiveRecordAccessTrait
 
                     // skip check if model has no changes
                     if (empty($this->getDirtyAttributes())) {
-                        Yii::trace('Model has no changes, skipping permission check', __METHOD__);
+                        Yii::debug('Model has no changes, skipping permission check', __METHOD__);
                         return true;
                     }
 
@@ -139,9 +140,9 @@ trait ActiveRecordAccessTrait
             }
 
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -165,9 +166,9 @@ trait ActiveRecordAccessTrait
             }
 
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -194,7 +195,7 @@ trait ActiveRecordAccessTrait
 
             if (!$items) {
 
-                \Yii::trace("Get and check UsersAuthItems", __METHOD__);
+                \Yii::debug('Get and check UsersAuthItems', __METHOD__);
 
                 // auth manager
                 $authManager = \Yii::$app->authManager;
@@ -221,6 +222,9 @@ trait ActiveRecordAccessTrait
     }
 
 
+    /**
+     * @return mixed|string
+     */
     public static function getDefaultAccessDomain() {
         // return first found permission
         $AuthManager = \Yii::$app->authManager;
@@ -273,10 +277,11 @@ trait ActiveRecordAccessTrait
      * @param array $authItems
      *
      * @return string|null
+     * @throws \yii\base\InvalidConfigException
      */
     public function authItemArrayToString($action, array $authItems)
     {
-        if (!in_array($action, self::accessColumnAttributes())) {
+        if (!in_array($action, self::accessColumnAttributes(),true)) {
             return null;
         }
 
@@ -285,13 +290,15 @@ trait ActiveRecordAccessTrait
 
     /**
      * Encode access column by action from csv to array
+     *
      * @param $action
      *
      * @return array|null
+     * @throws \yii\base\InvalidConfigException
      */
     public function authItemStringToArray($action)
     {
-        if (!in_array($action, self::accessColumnAttributes())) {
+        if (!in_array($action, self::accessColumnAttributes(),true)) {
             return null;
         }
         $arr = explode(',', $this->$action);
@@ -304,6 +311,7 @@ trait ActiveRecordAccessTrait
      * @param null $action
      *
      * @return bool
+     * @throws \yii\base\InvalidConfigException
      */
     public function hasPermission($action)
     {
@@ -357,14 +365,17 @@ trait ActiveRecordAccessTrait
             \Yii::$app->session->addFlash('error', $msg);
         }
         $this->addError($attribute, $msg);
-        \Yii::info('User ID: #' . \Yii::$app->user->id . ' | ' . $msg, get_called_class());
+        \Yii::info('User ID: #' . \Yii::$app->user->id . ' | ' . $msg, static::class);
     }
-    
+
     /**
      * Return correct part of check in set  query for current DB
+     *
      * @param $accessRead
      * @param $authItems
+     *
      * @return string
+     * @throws UnsupportedDbException
      */
     private static function getInSetQueryPart($accessRead, $authItems)
     {
@@ -379,10 +390,16 @@ trait ActiveRecordAccessTrait
         }
     }
 
-    // extract property from table name with schema
+
+    /**
+     * Extract property from table name with schema
+     * @param $schemaProperty
+     *
+     * @return bool|string
+     */
     private function getSchemaProperty($schemaProperty){
         // extract property from table name with schema
-        if (strstr($schemaProperty, '.')) {
+        if (false !== strpos($schemaProperty, '.')) {
             $prop = substr($schemaProperty, strrpos($schemaProperty, '.') + 1);
         } else {
             $prop = $schemaProperty;

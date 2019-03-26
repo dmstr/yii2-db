@@ -10,18 +10,29 @@ namespace dmstr\widgets;
 
 
 use dmstr\db\traits\ActiveRecordAccessTrait;
-use dmstr\modules\redirect\models\ActiveRecord;
 use kartik\select2\Select2;
+use yii\base\Model;
 use yii\base\Widget;
-use yii\widgets\InputWidget;
 use Yii;
+use yii\widgets\ActiveForm;
 
+/**
+ * @package dmstr\widgets
+ *
+ * @property ActiveForm $form
+ * @property Model $model
+ *
+ * @property string $fieldOwner
+ * @property string $fieldDomain
+ * @property string $fieldRead
+ * @property string $fieldUpdate
+ * @property string $fieldDelete
+ * @property string $fieldAppend
+ */
 class AccessInput extends Widget
 {
     public $form;
     public $model;
-
-    public $accessFields = ['owner', 'domain', 'read', 'update', 'delete'];
 
     public $fieldOwner = 'access_owner';
     public $fieldDomain = 'access_domain';
@@ -30,12 +41,15 @@ class AccessInput extends Widget
     public $fieldDelete = 'access_delete';
     public $fieldAppend = 'access_append';
 
+    /**
+     * @return string
+     */
     public function run()
     {
         $return = '';
         $userAuthItems = $this->model::getUsersAuthItems();
         $userDomains = $this->optsAccessDomain();
-        $disabled = !$this->model->hasPermission('access_update');
+        $disabled = !$this->model->hasPermission($this->fieldUpdate);
 
         $return .= $this->form
             ->field($this->model, $this->fieldOwner)
@@ -44,7 +58,7 @@ class AccessInput extends Widget
         foreach (['domain', 'read', 'update', 'delete'] as $access) {
             $fieldName = 'field' . ucfirst($access);
             $return .= $this->form->field($this->model, $this->{$fieldName})->widget(
-                Select2::classname(),
+                Select2::class,
                 [
                     'data' => $access === 'domain' ? $userDomains : $userAuthItems,
                     'options' => ['placeholder' => Yii::t('pages', 'Select ...')],
@@ -68,7 +82,8 @@ class AccessInput extends Widget
         if (Yii::$app->user->can('access.availableDomains:any')) {
             $availableLanguages[ActiveRecordAccessTrait::$_all] = 'GLOBAL';
             foreach (\Yii::$app->urlManager->languages as $availablelanguage) {
-                $availableLanguages[mb_strtolower($availablelanguage)] = mb_strtolower($availablelanguage);
+                $lc_language = mb_strtolower($availablelanguage);
+                $availableLanguages[$lc_language] = $lc_language;
             }
         } else {
             // allow current value
