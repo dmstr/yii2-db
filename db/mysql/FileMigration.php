@@ -64,7 +64,7 @@ class FileMigration extends Migration
         #echo "    ".$cmd . "\n"; // TODO echo only with --verbose
         exec($cmd, $output, $return);
 
-        return !$return === 0;
+        return $return === 0;
     }
 
     /**
