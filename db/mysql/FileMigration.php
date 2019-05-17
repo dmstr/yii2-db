@@ -44,33 +44,10 @@ class FileMigration extends Migration
 
     public function up()
     {
-        preg_match('/host=([^;]*)/', $this->db->dsn, $hostMatches);
-        $hostName = $hostMatches[1];
-        preg_match('/dbname=([^;]*)/', $this->db->dsn, $databaseMatches);
-        $databaseName = $databaseMatches[1];
-        preg_match('/port=([^;]*)/', $this->db->dsn, $portMatches);
-        if (isset($portMatches[1])) {
-            $port = $portMatches[1];
-        } else {
-            $port = "3306";
-        }
+        $sql = file_get_contents($this->file);
+        $exitCode = $this->db->createCommand($sql)->execute();
 
-        $command = new Command($this->mysqlExecutable);
-        $command->addArg('-h', $hostName);
-        $command->addArg('-P', $port);
-        $command->addArg('-u', $this->db->username);
-        $command->addArg('--password=', $this->db->password);
-
-        $cmd      = $command->getExecCommand()." \"{$databaseName}\" < \"{$this->file}\"";
-        #echo "    ".$cmd . "\n"; // TODO echo only with --verbose
-        exec($cmd, $output, $return);
-
-        if ($return !== 0) {
-            //var_dump($output, $return);
-            return false;
-        } else {
-            return true;
-        }
+        return $exitCode;
     }
 
     public function down()
