@@ -338,11 +338,17 @@ class MysqlController extends Controller
         $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg('-D', getenv('DB_ENV_MYSQL_DATABASE'));
-        $command->addArg('< '.$file);
+        $command->addArg('<', null, false);
+        $command->addArg($file);
 
-        echo $command->getExecCommand();
+        $this->stdout('Running command:'.PHP_EOL);
+        $this->stdout($command->getExecCommand());
+        $this->stdout(PHP_EOL);
 
-        $command->execute();
+        if (!$command->execute()) {
+            $this->stderr($command->getError());
+            $this->stderr(PHP_EOL);
+        }
     }
 
     /**
