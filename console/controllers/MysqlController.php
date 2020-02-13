@@ -198,7 +198,7 @@ class MysqlController extends Controller
         $pdo = new \PDO($this->_dsn, $this->_root, $this->_rootPassword);
         $pdo->exec(
             "CREATE DATABASE IF NOT EXISTS `{$this->_db}`;
-                 CREATE USER '{$this->_user}'@'%' IDENTIFIED BY '{$this->_pass}';
+                 CREATE USER IF NOT EXISTS '{$this->_user}'@'%' IDENTIFIED BY '{$this->_pass}';
                  GRANT ALL ON `{$this->_db}`.* TO '{$this->_user}'@'%';
                  FLUSH PRIVILEGES;"
         );
