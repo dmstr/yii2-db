@@ -105,7 +105,8 @@ class RbacMigration extends Migration
             if (isset($privilege['children']) && \is_array($privilege['children'])) {
                 foreach ($privilege['children'] as $child_privilege) {
                     $created_child_privilege = $this->createPrivilege($child_privilege['name'],
-                                                                      $child_privilege['type']);
+                                                                      $child_privilege['type'],
+                                                                      $child_privilege['rule'] ?? [] );
 
                     // check if parent already has child or if parent can have this as a child
                     if (!$this->authManager->hasChild($parent_privilege,
@@ -133,21 +134,25 @@ class RbacMigration extends Migration
      */
     protected function createPrivilege($name, $type, $rule_data = [])
     {
-
         $type_name = ($type === Item::TYPE_ROLE ? 'Role' : 'Permission');
 
         $getter = 'get' . $type_name;
+
         // check if permission or role exists and create it
         if ($this->authManager->{$getter}($name) === null) {
+            echo "Creating $type_name: $name".PHP_EOL;
             $privilege = $this->authManager->{'create' . $type_name}($name);
 
             if (!empty($rule_data)) {
+                echo "Creating rule...".PHP_EOL;
                 $privilege->ruleName = $this->createRule($rule_data['name'], $rule_data['class'])->name;
             }
 
             if (!$this->authManager->add($privilege)) {
                 throw new ErrorException('Cannot create ' . mb_strtolower($type_name) . ' ' . $name);
             }
+        } else {
+            echo "$name exists [skipping]".PHP_EOL;
         }
 
         return $this->authManager->{$getter}($name);
@@ -172,9 +177,12 @@ class RbacMigration extends Migration
     protected function createRule($name, $class)
     {
         if ($this->authManager->getRule($name) === null) {
-            $this->authManager->add(new $class([
+            $result = $this->authManager->add(new $class([
                                                    'name' => $name,
                                                ]));
+            if (!$result) {
+                throw new \Exception('Can not create rule');
+            }
         }
         return $this->authManager->getRule($name);
     }
