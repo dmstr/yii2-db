@@ -13,6 +13,7 @@ namespace dmstr\db;
 
 use Yii;
 use yii\base\ErrorException;
+use yii\db\Exception;
 use yii\db\Migration;
 use yii\rbac\Item;
 use yii\rbac\ManagerInterface;
@@ -27,6 +28,7 @@ use yii\rbac\Role;
  *
  * public $privileges = [
  *      [
+ *          '_exists' => true,
  *          'name' => 'Role_0',
  *          'type' => Item::TYPE_ROLE,
  *          'children' => [
@@ -35,6 +37,7 @@ use yii\rbac\Role;
  *                  'type' => Item::TYPE_PERMISSION
  *              ],
  *              [
+ *                  '_force' => true,
  *                  'name' => 'permission_1',
  *                  'type' => Item::TYPE_PERMISSION,
  *                  'rule' => [
@@ -88,6 +91,15 @@ class RbacMigration extends Migration
         $this->generatePrivileges($this->privileges);
     }
 
+
+    /**
+     * @return false
+     */
+    public function safeDown()
+    {
+        $this->removePrivileges($this->privileges);
+    }
+
     /**
      * Generate privileges recursively
      *
@@ -95,31 +107,35 @@ class RbacMigration extends Migration
      * @throws \yii\base\Exception
      * @throws ErrorException
      */
-    protected function generatePrivileges($privileges = [])
+    private function generatePrivileges($privileges = [], $parent = null)
     {
         foreach ($privileges as $privilege) {
-            $parent_privilege = $this->createPrivilege($privilege['name'], $privilege['type'],
-                                                       $privilege['rule'] ?? []);
-
-
-            if (isset($privilege['children']) && \is_array($privilege['children'])) {
-                foreach ($privilege['children'] as $child_privilege) {
-                    $created_child_privilege = $this->createPrivilege($child_privilege['name'],
-                                                                      $child_privilege['type'],
-                                                                      $child_privilege['rule'] ?? [] );
-
-                    // check if parent already has child or if parent can have this as a child
-                    if (!$this->authManager->hasChild($parent_privilege,
-                                                      $created_child_privilege) && $this->authManager->canAddChild($parent_privilege,
-                                                                                                                   $created_child_privilege)) {
-                        // add child to parent
-                        if (!$this->authManager->addChild($parent_privilege, $created_child_privilege)) {
-                            throw new ErrorException('Cannot add ' . $child_privilege['name'] . ' to ' . $privilege['name']);
-                        }
-                    }
+            #var_dump($privilege['_exists']);
+            if (!isset($privilege['_exists'])) {
+                $current = $this->createPrivilege(
+                    $privilege['name'],
+                    $privilege['type'],
+                    $privilege['description'] ?? null,
+                    $privilege['rule'] ?? [],
+                    $privilege['_force'] ?? null
+                );
+            } else {
+                echo "exists";
+                $current = Yii::$app->authManager->getRole($privilege['name']);
+                if (!$current) {
+                    throw new \yii\base\Exception("Item '{$privilege['name']}' not found");
                 }
-                $this->generatePrivileges($privilege['children']);
             }
+
+            if ($parent) {
+                if (!$this->authManager->addChild($parent, $current)) {
+                    throw new ErrorException('Cannot add ' . $current['name'] . ' to ' . $parent['name']);
+                } else {
+                    echo "Added child '" . $current->name . "' to '" . $parent->name . "'" . PHP_EOL;
+                }
+            }
+
+            $this->generatePrivileges($privilege['children'] ?? [], $current);
         }
     }
 
@@ -132,40 +148,61 @@ class RbacMigration extends Migration
      * @return Permission|Role
      * @throws ErrorException
      */
-    protected function createPrivilege($name, $type, $rule_data = [])
+    private function createPrivilege($name, $type, $description, $rule_data = [], $force = false)
     {
         $type_name = ($type === Item::TYPE_ROLE ? 'Role' : 'Permission');
 
         $getter = 'get' . $type_name;
 
         // check if permission or role exists and create it
-        if ($this->authManager->{$getter}($name) === null) {
-            echo "Creating $type_name: $name".PHP_EOL;
+        if ($force || $this->authManager->{$getter}($name) === null) {
+            echo "Creating $type_name: $name" . PHP_EOL;
             $privilege = $this->authManager->{'create' . $type_name}($name);
+            $privilege->description = $description;
 
             if (!empty($rule_data)) {
-                echo "Creating rule...".PHP_EOL;
                 $privilege->ruleName = $this->createRule($rule_data['name'], $rule_data['class'])->name;
             }
 
-            if (!$this->authManager->add($privilege)) {
-                throw new ErrorException('Cannot create ' . mb_strtolower($type_name) . ' ' . $name);
+            if ($force && $this->authManager->{$getter}($name) !== null) {
+                echo "Force updating '$name'..." . PHP_EOL;
+                if (!$this->authManager->update($name, $privilege)) {
+                    throw new ErrorException('Cannot update ' . mb_strtolower($type_name) . ' ' . $name);
+                }
+            } else {
+                echo "Adding '$name'..." . PHP_EOL;
+                if (!$this->authManager->add($privilege)) {
+                    throw new ErrorException('Cannot create ' . mb_strtolower($type_name) . ' ' . $name);
+                }
             }
         } else {
-            echo "$name exists [skipping]".PHP_EOL;
+            $msg = "$type_name '$name' already exists" . PHP_EOL;
+            throw new ErrorException($msg);
         }
 
         return $this->authManager->{$getter}($name);
     }
 
-    /**
-     * @return false
-     */
-    public function safeDown()
+    private function removePrivileges($privileges)
     {
-        echo static::class . ' cannot be reverted.';
-        return false;
+        foreach ($privileges AS $privilege) {
+            $item_type = ($privilege['type'] === Item::TYPE_ROLE ? 'Role' : 'Permission');
+            $item_name = $privilege['name'];
+
+            if (isset($privilege['_exists'])) {
+                echo "Skipped '$item_name' (marked exists)" . PHP_EOL;
+            } else {
+                $privilegeObj = $this->authManager->{'create' . $item_type}($item_name);
+                if (!$this->authManager->remove($privilegeObj)) {
+                    throw new Exception("Can not remove '$item_name'");
+                }
+                echo "Removed '$item_name'" . PHP_EOL;
+            }
+
+            $this->removePrivileges($privilege['children'] ?? []);
+        }
     }
+
 
     /**
      * Creates rule by given parameters
@@ -174,12 +211,12 @@ class RbacMigration extends Migration
      * @return \yii\rbac\Rule|null
      * @throws \Exception
      */
-    protected function createRule($name, $class)
+    private function createRule($name, $class)
     {
         if ($this->authManager->getRule($name) === null) {
             $result = $this->authManager->add(new $class([
-                                                   'name' => $name,
-                                               ]));
+                                                             'name' => $name,
+                                                         ]));
             if (!$result) {
                 throw new \Exception('Can not create rule');
             }
