@@ -110,8 +110,8 @@ class RbacMigration extends Migration
     private function generatePrivileges($privileges = [], $parent = null)
     {
         foreach ($privileges as $privilege) {
-            #var_dump($privilege['_exists']);
             if (!isset($privilege['_exists'])) {
+                // create new item, if _exists is not set
                 $current = $this->createPrivilege(
                     $privilege['name'],
                     $privilege['type'],
@@ -120,7 +120,7 @@ class RbacMigration extends Migration
                     $privilege['_force'] ?? null
                 );
             } else {
-                echo "exists";
+                // use existing item
                 $current = Yii::$app->authManager->getRole($privilege['name']);
                 if (!$current) {
                     throw new \yii\base\Exception("Item '{$privilege['name']}' not found");
