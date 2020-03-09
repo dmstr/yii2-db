@@ -128,7 +128,9 @@ class RbacMigration extends Migration
             }
 
             if ($parent) {
-                if (!$this->authManager->addChild($parent, $current)) {
+                if ($this->authManager->hasChild($parent, $current)) {
+                    echo "Existing child '" . $current->name . "' to '" . $parent->name . "'" . PHP_EOL;
+                } else if (!$this->authManager->addChild($parent, $current)) {
                     throw new ErrorException('Cannot add ' . $current['name'] . ' to ' . $parent['name']);
                 } else {
                     echo "Added child '" . $current->name . "' to '" . $parent->name . "'" . PHP_EOL;
