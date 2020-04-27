@@ -6,6 +6,7 @@ use igorw\FailingTooHardException;
 use mikehaertl\shellcommand\Command;
 use yii\console\Controller;
 use yii\console\Exception;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Console;
 use yii\helpers\FileHelper;
 use yii\helpers\Inflector;
@@ -47,19 +48,20 @@ class MysqlController extends Controller
     public $excludeTables = [];
 
     /**
-     * @var $dataOnly bool [0|1] dump only data
-     */
-    public $dataOnly = 0;
-
-    /**
      * @var $truncateTables bool [0|1] add truncate table command
      */
-    public $truncateTables = 0;
+    public $truncateTables = true;
 
     /**
      * @var string default path/alias for file output
      */
     public $outputPath = '@runtime/mysql';
+
+    /**
+     * @var boolean show more messages
+     */
+    public $verbose = false;
+
 
     private $_db;
     private $_dsn;
@@ -74,18 +76,32 @@ class MysqlController extends Controller
     public function options($actionId)
     {
         switch ($actionId) {
-            case $actionId == 'dump' || $actionId == 'x-dump-data':
+            case $actionId == 'dump':
                 $additionalOptions = ['noDataTables'];
                 break;
-            case $actionId == 'x-dump' || 'export':
-                $additionalOptions = ['includeTables', 'excludeTables', 'dataOnly', 'truncateTables', 'outputPath'];
+            case $actionId == 'export':
+                $additionalOptions = ['includeTables', 'excludeTables', 'truncateTables', 'outputPath'];
                 break;
             default:
                 $additionalOptions = [];
         }
         return array_merge(
             parent::options($actionId),
-            $additionalOptions
+            $additionalOptions,
+            ['verbose']
+        );
+    }
+
+
+    public function optionAliases()
+    {
+        return ArrayHelper::merge(
+            parent::optionAliases(),
+            [
+                'o' => 'outputPath',
+                'I' => 'includeTables',
+                'X' => 'excludeTables',
+            ]
         );
     }
 
@@ -249,7 +265,6 @@ class MysqlController extends Controller
         $command = new Command('mysqldump');
 
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
-        $command->addArg('-P', getenv('DB_PORT_3306_TCP_PORT'));
         $command->addArg('-u', getenv('DB_ENV_MYSQL_USER'));
         $command->addArg('--password=', getenv('DB_ENV_MYSQL_PASSWORD'));
         $command->addArg('--no-create-info');
@@ -263,13 +278,29 @@ class MysqlController extends Controller
             $command->addArg('-P', getenv('DB_PORT_3306_TCP_PORT'));
         }
 
-        $this->stdout("Ignoring tables: ");
-        foreach ($this->noDataTables as $table) {
-            $command->addArg('--ignore-table', getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
-            $this->stdout("$table, ");
+        // exclude-tables
+        if ($this->excludeTables) {
+            $this->stdout("Ignoring tables: ");
+            foreach ($this->excludeTables as $table) {
+                $command->addArg('--ignore-table', getenv('DB_ENV_MYSQL_DATABASE') . '.' . $table);
+                $this->stdout("$table, ");
+            }
+            $this->stdout("\n");
         }
-        $this->stdout("\n");
+
+        // database
         $command->addArg(getenv('DB_ENV_MYSQL_DATABASE'));
+
+        // include tables
+        if ($this->includeTables) {
+            foreach ($this->includeTables as $table) {
+                $command->addArg($table);
+            }
+        }
+
+        if ($this->verbose) {
+            $this->stdout($command->getExecCommand());
+        }
 
         $command->execute();
 
@@ -282,12 +313,14 @@ class MysqlController extends Controller
         FileHelper::createDirectory($dir);
 
         $dump = $command->getOutput();
-        $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;', $dump);
-        $file = $dir . '/' . $fileName;
+        if ($this->truncateTables) {
+            $dump = preg_replace('/LOCK TABLES (.+) WRITE;/', 'LOCK TABLES $1 WRITE; TRUNCATE TABLE $1;', $dump);
+        }
 
+        $file = \Yii::getAlias($dir . '/' . $fileName);
         file_put_contents($file, $dump);
 
-        $this->stdout("\nMySQL dump successfully written to '$file'\n", Console::FG_GREEN);
+        $this->stdout("\nMySQL export successfully written to '$file'\n", Console::FG_GREEN);
     }
 
 
@@ -332,7 +365,8 @@ class MysqlController extends Controller
         $this->stdout("Dump to file '$file' completed.\n");
     }
 
-    public function actionImport($file) {
+    public function actionImport($file)
+    {
         $command = new Command('mysql');
         $command->addArg('-h', getenv('DB_PORT_3306_TCP_ADDR'));
         $command->addArg('-P', getenv('DB_PORT_3306_TCP_PORT'));
@@ -342,7 +376,7 @@ class MysqlController extends Controller
         $command->addArg('<', null, false);
         $command->addArg($file);
 
-        $this->stdout('Running command:'.PHP_EOL);
+        $this->stdout('Running command:' . PHP_EOL);
         $this->stdout($command->getExecCommand());
         $this->stdout(PHP_EOL);
 
