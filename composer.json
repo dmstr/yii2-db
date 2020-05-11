@@ -25,7 +25,6 @@
       "dmstr\\db\\": "db/",
       "dmstr\\db\\tests\\": "db/tests/",
       "dmstr\\console\\": "console/",
-      "dmstr\\widgets\\": "widgets/"
     }
   }
 }
