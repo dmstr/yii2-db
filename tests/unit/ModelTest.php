@@ -3,7 +3,7 @@
 namespace dmstr\db\tests\unit;
 
 use dektrium\user\models\User;
-use dmstr\db\traits\ActiveRecordAccessTrait;
+use dmstr\activeRecordPermissions\ActiveRecordAccessTrait;
 use Yii;
 use yii\db\ActiveRecord;
 
