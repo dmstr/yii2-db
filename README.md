@@ -8,7 +8,11 @@ Yii 2 Database Toolkit
 About
 -----
 
-- Database extensions
+- Generic database exentsions
+  - Hydrated Attributes
+- Database extensions for MySQL
+  - File Migration
+  - Mysql dump/export/import console controller
 - RBAC migrations moved to https://github.com/dmstr/yii2-rbac-migration since 2.0.0
 - Active record access classes moved to https://github.com/dmstr/yii2-active-record-permissions since 2.0.0
 
