@@ -15,7 +15,7 @@ use yii\db\Migration;
 
 
 /**
- * Class MysqlFileMigration
+ * Class FileMigration
  * @package common\components
  * @author Tobias Munk <tobias@diemeisterei.de>
  */
@@ -79,4 +79,4 @@ class FileMigration extends Migration
         return false;
     }
 
-} 
+}
