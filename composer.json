@@ -23,8 +23,12 @@
   "autoload": {
     "psr-4": {
       "dmstr\\db\\": "db/",
-      "dmstr\\db\\tests\\": "db/tests/",
       "dmstr\\console\\": "console/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "dmstr\\db\\tests\\": "db/tests/"
     }
   }
 }
