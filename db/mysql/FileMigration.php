@@ -9,6 +9,7 @@
 
 namespace dmstr\db\mysql;
 
+use dmstr\db\helper\CliHelper;
 use mikehaertl\shellcommand\Command;
 use yii\base\Exception;
 use yii\db\Migration;
@@ -24,6 +25,7 @@ class FileMigration extends Migration
 
     public $file = null;
     public $mysqlExecutable = 'mysql';
+    public $mysqlOptions = [];
 
     public function init()
     {
@@ -44,24 +46,20 @@ class FileMigration extends Migration
 
     public function up()
     {
-        preg_match('/host=([^;]*)/', $this->db->dsn, $hostMatches);
-        $hostName = $hostMatches[1];
-        preg_match('/dbname=([^;]*)/', $this->db->dsn, $databaseMatches);
-        $databaseName = $databaseMatches[1];
-        preg_match('/port=([^;]*)/', $this->db->dsn, $portMatches);
-        if (isset($portMatches[1])) {
-            $port = $portMatches[1];
-        } else {
-            $port = "3306";
-        }
+
+        $dsnOpts = CliHelper::getMysqlOptsFromDsn($this->db);
 
         $command = new Command($this->mysqlExecutable);
-        $command->addArg('-h', $hostName);
-        $command->addArg('-P', $port);
+        $command->addArg('-h', $dsnOpts['host']);
+        $command->addArg('-P', $dsnOpts['port']);
         $command->addArg('-u', $this->db->username);
         $command->addArg('--password=', $this->db->password);
 
-        $cmd      = $command->getExecCommand()." \"{$databaseName}\" < \"{$this->file}\"";
+        foreach (CliHelper::getMysqlCliArgsFromPdo($this->db) as $opt => $value) {
+                $command->addArg($opt, $value);
+        }
+
+        $cmd      = $command->getExecCommand()." \"{$dsnOpts['db']}\" < \"{$this->file}\"";
         #echo "    ".$cmd . "\n"; // TODO echo only with --verbose
         exec($cmd, $output, $return);
 
