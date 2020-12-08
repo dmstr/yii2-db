@@ -118,6 +118,13 @@ class MysqlController extends Controller
         );
     }
 
+    public function beforeAction($action)
+    {
+        $db = \Yii::$app->get($this->db);
+        $this->stdout($db->dsn . PHP_EOL, Console::FG_YELLOW);
+        return parent::beforeAction($action);
+    }
+
     public function afterAction($action, $result)
     {
         $this->stdout(PHP_EOL);
@@ -184,14 +191,14 @@ class MysqlController extends Controller
      *
      * Creates database and grants permissions to user
      *
-     * @param null $root eg. ENV `DB_ENV_MYSQL_ROOT_USER
-     * @param null $rootPassword eg. ENV `DB_ENV_MYSQL_ROOT_USER`
+     * @param $root eg. ENV `DB_ENV_MYSQL_ROOT_USER
+     * @param $rootPassword eg. ENV `DB_ENV_MYSQL_ROOT_USER`
      *
      * @throws \yii\base\ExitException
      */
     public function actionCreate(
-        $root = null,
-        $rootPassword = null
+        $root,
+        $rootPassword
     ) {
         $db = \Yii::$app->get($this->db);
         $opts = CliHelper::getMysqlOptsFromDsn($db);
@@ -216,7 +223,7 @@ class MysqlController extends Controller
 
             // try to create a database for the user
             $this->stdout(
-                "Creating database '{$dbName}' and granting permissions to user '{$user}' on DSN '{$dsn}' with user '{$root}'"
+                "Creating database from DSN for '{$user}' with user '{$root}'"
             );
 
             $pdo = new \PDO($dsn, $root, $rootPassword);
@@ -232,12 +239,12 @@ class MysqlController extends Controller
     /**
      * Remove schema
      *
-     * @param null $root eg. ENV `DB_ENV_MYSQL_ROOT_USER
-     * @param null $rootPassword eg. ENV `DB_ENV_MYSQL_ROOT_USER`
+     * @param $root eg. ENV `DB_ENV_MYSQL_ROOT_USER
+     * @param $rootPassword eg. ENV `DB_ENV_MYSQL_ROOT_USER`
      */
     public function actionDestroy(
-        $root = null,
-        $rootPassword = null
+        $root,
+        $rootPassword
     ) {
         if ($this->confirm('This is a destructive operation! Continue?', !$this->interactive)) {
             $db = \Yii::$app->get($this->db);
@@ -331,15 +338,11 @@ class MysqlController extends Controller
         $date = date('ymd_His');
         $dir = $this->outputPath;
         $appName = \Yii::$app->id;
-        $file = $dir . "/d{$date}_{$appName}.sql";
+        $file = \Yii::getAlias($dir . "/d{$date}_{$appName}.sql");
         $db = \Yii::$app->get($this->db);
         $opts = CliHelper::getMysqlOptsFromDsn($db);
 
         FileHelper::createDirectory($dir);
-
-        if ($this->verbose) {
-            $this->stdout("Using database {$db->dsn}" . PHP_EOL);
-        }
 
         // dump tables with data
         $command = CliHelper::getMysqlCommand('mysqldump', $db);
