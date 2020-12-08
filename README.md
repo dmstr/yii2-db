@@ -8,6 +8,16 @@ Yii 2 Database Toolkit
 About
 -----
 
+
+### [dmstr\db\behaviors\HydratedAttributes](https://github.com/dmstr/yii2-db/blob/master/db/behaviors/HydratedAttributes.php)
+
+Retrieves all eager loaded attributes of a model including relations. Once the extension is installed, simply use it in your code by accessing the corresponding classes by their full namespaced path.
+
+### [dmstr\db\mysql\FileMigration](https://github.com/dmstr/yii2-db/blob/master/db/mysql/FileMigration.php)
+
+runs database migrations from `sql` files
+
+
 - Generic database exentsions
   - Hydrated Attributes
 - Database extensions for MySQL
@@ -25,7 +35,7 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist dmstr/yii2-db "*"
+composer require --prefer-dist dmstr/yii2-db "*"
 ```
 
 or add
@@ -36,50 +46,8 @@ or add
 
 to the require section of your `composer.json` file.
 
-Commands
---------
-
-### `yii db`
-
-```
-DESCRIPTION
-
-MySQL database maintenance command.
-
-
-SUB-COMMANDS
-
-- db/create               Create MySQL database
-- db/destroy              Remove the current schema
-- db/dump                 Dumps current database tables to runtime folder
-- db/export               export data tables, without logs and caches
-- db/import
-- db/index (default)      Displays tables in database
-- db/wait-for-connection
-
-To see the detailed information about individual sub-commands, enter:
-
-  yii help <sub-command>
-```
-
-
-Usage
------
-
-### [dmstr\db\behaviors\HydratedAttributes](https://github.com/dmstr/yii2-db/blob/master/db/behaviors/HydratedAttributes.php)
-
-Retrieves all eager loaded attributes of a model including relations. Once the extension is installed, simply use it in your code by accessing the corresponding classes by their full namespaced path.
-
-### [dmstr\db\mysql\FileMigration](https://github.com/dmstr/yii2-db/blob/master/db/mysql/FileMigration.php)
-
-runs database migrations from `sql` files
-
-Create a file migration class
-
-```
-./yii migrate/create \
-    --templateFile='@vendor/dmstr/yii2-db/db/mysql/templates/file-migration.php' init_dump
-```
+Configuration
+-------------
 
 ### [dmstr\console\controllers](https://github.com/dmstr/yii2-db/blob/master/console/controllers)
 
@@ -97,26 +65,90 @@ Include it in your console configuration
     ],
 ```
 
-Show help
+Usage
+-----
+
+### Commands
+
+#### `yii migrate ...`
+
+Create a file migration class
 
 ```
-./yii help db
+yii migrate/create \
+    --templateFile='@vendor/dmstr/yii2-db/db/mysql/templates/file-migration.php' init_dump
 ```
 
-Available commands
-  
+
+#### `yii db ...`
+
 ```
 DESCRIPTION
 
-MySQL database maintenance command.
+MySQL database maintenance command for current (db) connection
 
 
 SUB-COMMANDS
 
-- db/create           Create MySQL database from ENV vars and grant permissions
-- db/dump             Dumps current database tables to runtime folder
-- db/index (default)  Displays tables in database
+- db/create               Create schema
+- db/destroy              Remove schema
+- db/dump                 Dump schema (all tables)
+- db/export               Export tables (INSERT only)
+- db/import               Import from file to database and flush cache
+- db/index (default)      Displays tables in database
+- db/wait-for-connection
+
+To see the detailed information about individual sub-commands, enter:
+
+  yii help <sub-command>
+
 ```
+
+
+Show help
+
+```
+yii help db
+```
+
+
+### Examples
+
+Dry-run command (not available for all commands)
+
+```
+yii db/create root secret -n
+```
+
+Destroy database
+
+```
+yii db/destroy root secret
+```
+
+Dump all tables
+
+```
+yii db/dump -o /dumps
+```
+
+Dump from different connection, exclude logging tables
+
+``` 
+yii db/dump -o /dumps \
+  --db=dbReadonly \
+  --noDataTables=app_audit_data,app_audit_entry,app_audit_error,app_audit_javascript,app_audit_mail
+```
+
+Dump from secondary connection, import into primary (default)
+
+```
+yii db/dump -o /dumps   \
+    --db=dbReadonly   \
+    --noDataTables=app_audit_data,app_audit_entry,app_audit_error,app_audit_javascript,app_audit_mail \
+ | xargs yii db/import --interactive=0
+```
+
 
 ---
 

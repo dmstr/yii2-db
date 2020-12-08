@@ -11,6 +11,7 @@
 namespace dmstr\db\helper;
 
 
+use mikehaertl\shellcommand\Command;
 use yii\db\Connection;
 
 /**
@@ -24,6 +25,22 @@ use yii\db\Connection;
 class CliHelper
 {
 
+
+    public static function getMysqlCommand($mysqlExecutable = 'mysql', $db){
+        $dsnOpts = CliHelper::getMysqlOptsFromDsn($db);
+
+        $command = new Command($mysqlExecutable);
+        $command->addArg('-h', $dsnOpts['host']);
+        $command->addArg('-P', $dsnOpts['port']);
+        $command->addArg('-u', $db->username);
+        $command->addArg('--password=', $db->password);
+
+        foreach (CliHelper::getMysqlCliArgsFromPdo($db) as $opt => $value) {
+            $command->addArg($opt, $value);
+        }
+
+        return $command;
+    }
 
     /**
      * parse dsn and return db host, db port and db name as array
@@ -49,6 +66,7 @@ class CliHelper
         if (isset($portMatches[1])) {
             $cliArgs['port'] = $portMatches[1];
         }
+
         return $cliArgs;
     }
 
