@@ -347,10 +347,14 @@ class MysqlController extends Controller
         // dump tables with data
         $command = CliHelper::getMysqlCommand('mysqldump', $db);
         $command->addArg('--no-tablespaces');
+        $command->addArg('--opt');
 
-        $noDataTables = explode(',', $this->noDataTables);
-        foreach ($noDataTables as $table) {
-            $command->addArg('--ignore-table', $opts['db'] . '.' . $table);
+        if ($this->noDataTables) {
+            $noDataTables = explode(',', $this->noDataTables);
+
+            foreach ($noDataTables as $table) {
+                $command->addArg('--ignore-table', $opts['db'] . '.' . $table);
+            }
         }
         $command->addArg($opts['db']);
         $command->addArg(' > ', '', false);
@@ -365,11 +369,12 @@ class MysqlController extends Controller
         }
 
 
-        if ($noDataTables) {
+        if ($this->noDataTables) {
             // dump tables without data
             $commandNoData = CliHelper::getMysqlCommand('mysqldump', $db);
             $commandNoData->addArg('--no-tablespaces');
             $commandNoData->addArg('--no-data');
+            $commandNoData->addArg('--opt');
             $commandNoData->addArg($opts['db']);
 
             foreach ($noDataTables as $table) {
