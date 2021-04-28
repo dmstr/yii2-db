@@ -83,11 +83,11 @@ class MysqlController extends Controller
      */
     public function options($actionId)
     {
-        switch ($actionId) {
+        switch (true) {
             case $actionId == 'dump':
                 $additionalOptions = ['noDataTables', 'dryRun'];
                 break;
-            case $actionId = 'import';
+            case $actionId == 'import';
                 $additionalOptions = ['cache', 'dryRun'];
                 break;
             case $actionId == 'export':
@@ -96,6 +96,7 @@ class MysqlController extends Controller
             default:
                 $additionalOptions = [];
         }
+
         return array_merge(
             parent::options($actionId),
             ['verbose', 'db', 'outputPath'], // global options
@@ -272,7 +273,10 @@ class MysqlController extends Controller
      */
     public function actionExport()
     {
-        $fileName = $this->getFilePrefix() . "_data.sql";
+        $latestMigrationId = $this->getLatestMigrationId();
+        $date = date('ymd_His');
+        $fileName = "{$latestMigrationId}x_export_at_{$date}.sql";
+
         $db = \Yii::$app->get($this->db);
         $opts = CliHelper::getMysqlOptsFromDsn($db);
 
@@ -451,4 +455,16 @@ class MysqlController extends Controller
         return 'm' . gmdate('ymd_His') . '_' . \Yii::$app->id . $sanitizedVersion;
     }
 
+    /**
+     * @return mixed return the last applied migration id (m123456_123456)
+     */
+    private function getLatestMigrationId(){
+        $command = new Command();
+        $command->setCommand('yii migrate/history 1');
+        $command->execute();
+        $output = $command->getOutput();
+        preg_match('/m[0-9_]{6}_[0-9_]{6}/', $output, $matches);
+        $latestMigrationId = $matches[0];
+        return $latestMigrationId;
+    }
 }
