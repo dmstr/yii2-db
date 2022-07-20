@@ -54,6 +54,9 @@ class FileMigration extends Migration
         $command->addArg('-P', $dsnOpts['port']);
         $command->addArg('-u', $this->db->username);
         $command->addArg('--password=', $this->db->password);
+        if ($this->db->charset) {
+            $command->addArg('--default-character-set=', $this->db->charset);
+        }
 
         foreach (CliHelper::getMysqlCliArgsFromPdo($this->db) as $opt => $value) {
                 $command->addArg($opt, $value);
