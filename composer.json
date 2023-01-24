@@ -16,6 +16,7 @@
     }
   ],
   "require": {
+    "php": ">=7.1",
     "mikehaertl/php-shellcommand": "1.*",
     "yiisoft/yii2": "2.*",
     "schmunk42/retry" : "*"

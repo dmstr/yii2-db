@@ -7,11 +7,10 @@
  * file that was distributed with this source code.
  */
 
-
 namespace dmstr\db\helper;
 
-
 use mikehaertl\shellcommand\Command;
+use yii\base\Exception;
 use yii\db\Connection;
 
 /**
@@ -24,9 +23,12 @@ use yii\db\Connection;
  */
 class CliHelper
 {
+    public static function getMysqlCommand($mysqlExecutable = 'mysql', ?Connection $db = null)
+    {
+        if ($db === null) {
+            throw new Exception('Invalid database config');
+        }
 
-
-    public static function getMysqlCommand($mysqlExecutable = 'mysql', $db){
         $dsnOpts = CliHelper::getMysqlOptsFromDsn($db);
 
         $command = new Command($mysqlExecutable);
@@ -54,7 +56,7 @@ class CliHelper
 
         $cliArgs = [
             'host' => null,
-            'db'   => null,
+            'db' => null,
             'port' => 3306,
         ];
 
