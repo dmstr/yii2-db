@@ -412,6 +412,9 @@ class MysqlController extends Controller
         $db = \Yii::$app->get($this->db);
         $opts = CliHelper::getMysqlOptsFromDsn($db);
         $command = CliHelper::getMysqlCommand('mysql', $db);
+        if ($db->charset) {
+            $command->addArg('--default-character-set=', $db->charset);
+        }
         $command->addArg('-D', $opts['db']);
         $command->addArg('<', null, false);
         $command->addArg($file);
