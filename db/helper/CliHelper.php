@@ -1,4 +1,5 @@
 <?php
+// file generated with AI assistance: Claude Code - 2026-10-22 12:05:00 UTC
 /**
  * @link http://www.diemeisterei.de/
  * @copyright Copyright (c) 2020 diemeisterei GmbH, Stuttgart
@@ -82,13 +83,15 @@ class CliHelper
     public static function getMysqlCliArgsFromPdo(Connection $db)
     {
 
+        // PHP >= 8.4 provides Pdo\Mysql::ATTR_*, PDO::MYSQL_ATTR_* is deprecated since PHP 8.5
+        $prefix = class_exists('Pdo\\Mysql') ? 'Pdo\\Mysql::ATTR_' : 'PDO::MYSQL_ATTR_';
         $optsMap = [
-            \PDO::MYSQL_ATTR_SSL_CAPATH => '--ssl-capath=',
-            \PDO::MYSQL_ATTR_SSL_CA => '--ssl-ca=',
-            \PDO::MYSQL_ATTR_SSL_CERT => '--ssl-cert=',
-            \PDO::MYSQL_ATTR_SSL_KEY => '--ssl-key=',
-            \PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => '--ssl-verify-server-cert=',
-            \PDO::MYSQL_ATTR_SSL_CIPHER => '--ssl-cipher='
+            constant($prefix . 'SSL_CAPATH') => '--ssl-capath=',
+            constant($prefix . 'SSL_CA') => '--ssl-ca=',
+            constant($prefix . 'SSL_CERT') => '--ssl-cert=',
+            constant($prefix . 'SSL_KEY') => '--ssl-key=',
+            constant($prefix . 'SSL_VERIFY_SERVER_CERT') => '--ssl-verify-server-cert=',
+            constant($prefix . 'SSL_CIPHER') => '--ssl-cipher='
         ];
 
         $cliArgs = [];
