@@ -1,4 +1,5 @@
 <?php
+// file generated with AI assistance: Claude Code - 2026-10-22 11:19:32 UTC
 
 namespace dmstr\console\controllers;
 
@@ -87,7 +88,7 @@ class MysqlController extends Controller
             case $actionId == 'dump':
                 $additionalOptions = ['noDataTables', 'dryRun'];
                 break;
-            case $actionId == 'import';
+            case $actionId == 'import':
                 $additionalOptions = ['cache', 'dryRun'];
                 break;
             case $actionId == 'export':
